@@ -330,7 +330,7 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
         //cout << "Poletime"<< rotacia <<endl;
         double zasah = Kp*error;
-        double rychlost = zasah/tickToMeter;
+        double rychlost = zasah/tickToMeter/3;
 
         if(rotacia > 1.5)
             rotacia = 1.5;
