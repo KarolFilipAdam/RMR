@@ -283,7 +283,8 @@ double currentX = 0;
 double currentY = 0;
 long double tickToMeter = 0.000085292090497737556558; // [m/tick]
 long double b = 0.23; // wheelbase distance in meters, from kobuki manual https://yujinrobot.github.io/kobuki/doxygen/enAppendixProtocolSpecification.html
-double Kp = 0.2;
+double Kp = 0.1;
+double KpR = 1/5;
 bool autoMove = false;
 
 void MainWindow::zadaniePrve(TKobukiData robotdata){
@@ -317,6 +318,9 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
         double theAngle = atan2(yDot,xDot);
         double rotacia = theAngle - fi;
 
+
+
+
         if (rotacia > PI) rotacia = -2*PI+rotacia;
         if (rotacia < -PI) rotacia = 2*PI+rotacia;
         rotacia *= 10;
@@ -326,24 +330,40 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
         //cout << "Poletime"<< rotacia <<endl;
         double zasah = Kp*error;
-
-        double wantAngle = atan2(yDot,xDot);
         double rychlost = zasah/tickToMeter;
 
-        if (error < 0.001) {
-            robot.setTranslationSpeed(0);
+        if(rotacia > 1.5)
+            rotacia = 1.5;
 
 
-            autoMove = false;
-            cout<<"SOM TU"<<endl;
+        if(rotacia < -1.5)
+            rotacia = -1.5;
+
+
+        if(rychlost > 200)
+        {
+            rychlost = 200;
+
         }
-        else{
-            robot.setTranslationSpeed(rychlost);
-        }
+
         if(abs(rotacia) > 0.3)
         {
             robot.setRotationSpeed(rotacia);
+            cout<<"rotacia"<<rotacia<<endl;
+
         }
+        else{
+           robot.setRotationSpeed(0);
+            if (error > 0.001) {
+                robot.setTranslationSpeed(rychlost);
+            }
+            else{
+                robot.setTranslationSpeed(0);
+                autoMove = false;
+
+            }
+        }
+
 
 
 
