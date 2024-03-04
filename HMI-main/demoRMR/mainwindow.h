@@ -51,6 +51,7 @@ public:
 
     int processThisRobot(TKobukiData robotdata);
     void zadaniePrve(TKobukiData robotdata);
+    void Zadanie3();
 
 int processThisCamera(cv::Mat cameraData);
 int processThisSkeleton(skeleton skeledata);
