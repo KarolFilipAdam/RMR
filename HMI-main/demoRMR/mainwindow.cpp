@@ -286,8 +286,8 @@ double currentX = 0;
 double currentY = 0;
 long double tickToMeter = 0.000085292090497737556558; // [m/tick]
 long double b = 0.23; // wheelbase distance in meters, from kobuki manual https://yujinrobot.github.io/kobuki/doxygen/enAppendixProtocolSpecification.html
-double Kp = 0.1;
-double KpR = 1/5;
+double Kp = 800;
+double KpR = 10;
 bool autoMove = false;
 double natocenie = 0.3;
 
@@ -318,7 +318,7 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
     if(autoMove){
 
-        double error = (abs(xDot) + abs(yDot));
+        double error = (abs(yDot) + abs(xDot));
         double theAngle = atan2(yDot,xDot);
         double rotacia = theAngle - fi;
 
@@ -327,14 +327,16 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
         if (rotacia > PI) rotacia = -2*PI+rotacia;
         if (rotacia < -PI) rotacia = 2*PI+rotacia;
-        rotacia *= 10;
-        if (rotacia > 2*PI) rotacia = 2*PI;
-        if (rotacia < -2*PI) rotacia = -2*PI;
+        rotacia *= KpR;
+        //if (rotacia > 2*PI) rotacia = 2*PI;
+        //if (rotacia < -2*PI) rotacia = -2*PI;
 
 
         //cout << "Poletime"<< rotacia <<endl;
         double zasah = Kp*error;
-        double rychlost = zasah/tickToMeter/3;
+
+        double rychlost = zasah;
+        //rychlost = (double) rychlost * (2*PI-abs(rotacia)+0.1)/2/PI;
 
         if(rotacia > 1.5)
             rotacia = 1.5;
@@ -350,25 +352,59 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
         }
 
+        cout<<"error"<<error<<endl;
+        cout<<"rotacia"<<rotacia<<endl;
+
+/*
         if(abs(rotacia) > natocenie)
         {
             robot.setRotationSpeed(rotacia);
-            cout<<"rotacia"<<rotacia<<endl;
+
 
         }
         else if(abs(rotacia) < natocenie)
         {
-            natocenie = 1.5;
-            if (error > 0.001) {
+            natocenie = 1;
+            if (error > 0.03) {
                 robot.setTranslationSpeed(rychlost);
             }
+            else{
+                robot.setTranslationSpeed(0);
+              //  robot.setRotationSpeed(0);
+                natocenie = 0.3;
+                autoMove = false;
+
+            }
+
+
+        }
+*/
+        if(error > 0.03){
+
+            if(abs(rotacia) > natocenie)
+            {
+                robot.setRotationSpeed(rotacia);
+
+
+            }
+            else
+               {
+                natocenie = 1.4;
+                robot.setTranslationSpeed(rychlost);
+               }
+
+
         }
         else{
+
             robot.setTranslationSpeed(0);
-            robot.setRotationSpeed(0);
+            //  robot.setRotationSpeed(0);
             natocenie = 0.3;
             autoMove = false;
+
         }
+
+
 
 
 
