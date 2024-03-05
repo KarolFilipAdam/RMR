@@ -389,7 +389,7 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
             }
             else
                {
-                natocenie = 1.4;
+                natocenie = 1.3;
                 robot.setTranslationSpeed(rychlost);
                }
 
