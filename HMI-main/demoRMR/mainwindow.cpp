@@ -160,8 +160,11 @@ int MainWindow::processThisLidar(LaserMeasurement laserData)
     //tu mozete robit s datami z lidaru.. napriklad najst prekazky, zapisat do mapy. naplanovat ako sa prekazke vyhnut.
     // ale nic vypoctovo narocne - to iste vlakno ktore cita data z lidaru
     updateLaserPicture=1;
+
+
     update();//tento prikaz prinuti prekreslit obrazovku.. zavola sa paintEvent funkcia
 
+    Zadanie3();
 
     return 0;
 
@@ -331,7 +334,7 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
         //cout << "Poletime"<< rotacia <<endl;
         double zasah = Kp*error;
-        double rychlost = zasah/tickToMeter;
+        double rychlost = zasah/tickToMeter/3;
 
         if(rotacia > 1.5)
             rotacia = 1.5;
@@ -382,5 +385,32 @@ void MainWindow::on_pushButton_10_clicked()
     cordX = ui->lineEdit_5->text().toDouble();
     cordY = ui->lineEdit_6->text().toDouble();
     autoMove = true;
+}
+
+#define mapSize 50
+void MainWindow::Zadanie3(){
+    if(!ui->pushButton_11->isChecked())
+        return;
+
+    static bool map[mapSize*2][mapSize*2];
+    static double x;
+    static double y;
+    static double latestAngle = fi;
+    bool newData = false;
+
+
+    for (int i=0; i<copyOfLaserData.numberOfScans; i++) {
+       // if (copyOfLaserData.Data[i].scanDistance < 140) continue;
+        x = currentX + copyOfLaserData.Data[i].scanDistance*cos(fi+(double)(360-copyOfLaserData.Data[i].scanAngle)/180*PI)/1000;
+        y = currentY + copyOfLaserData.Data[i].scanDistance*sin(fi+(double)(360-copyOfLaserData.Data[i].scanAngle)/180*PI)/1000;
+        if (map[mapSize+(int)(x*mapSize/6)][mapSize+(int)(y*mapSize/6)] == 0) {
+            map[mapSize+(int)(x*mapSize/6)][mapSize+(int)(y*mapSize/6)] = 1;
+            newData = true;
+        }
+    }
+
+
+
+
 }
 
