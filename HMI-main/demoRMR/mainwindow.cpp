@@ -286,11 +286,11 @@ double currentX = 0;
 double currentY = 0;
 long double tickToMeter = 0.000085292090497737556558; // [m/tick]
 long double b = 0.23; // wheelbase distance in meters, from kobuki manual https://yujinrobot.github.io/kobuki/doxygen/enAppendixProtocolSpecification.html
-double Kp = 800;
-double KpR = 10;
+double Kp = 2000;
+double KpR = 3;
 bool autoMove = false;
 double natocenie = 0.3;
-
+double rampa = 10;
 void MainWindow::zadaniePrve(TKobukiData robotdata){
 
     static unsigned short latestR = robotdata.EncoderRight;
@@ -337,6 +337,7 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
         double rychlost = zasah;
         //rychlost = (double) rychlost * (2*PI-abs(rotacia)+0.1)/2/PI;
+        cout << "rychlost"<< rychlost <<endl;
 
         if(rotacia > 1.5)
             rotacia = 1.5;
@@ -346,13 +347,14 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
             rotacia = -1.5;
 
 
-        if(rychlost > 200)
+        if(rychlost > 400)
         {
-            rychlost = 200;
+            rychlost = 400;
 
         }
 
-        cout<<"error"<<error<<endl;
+
+        //cout<<"error"<<error<<endl;
         cout<<"rotacia"<<rotacia<<endl;
 
 /*
@@ -379,6 +381,7 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
         }
 */
+        /*
         if(error > 0.03){
 
             if(abs(rotacia) > natocenie)
@@ -403,8 +406,34 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
             autoMove = false;
 
         }
+*/
+        if(rychlost-rampa > 10){
+
+            rychlost = rampa+10;
+
+        }
 
 
+
+
+
+        rampa = rychlost;
+
+
+        if(error > 0.03){
+
+            if(abs(rotacia) > (30*PI/180)*KpR){
+                cout<<"here"<<endl;
+                robot.setRotationSpeed(rotacia);
+            }
+            else{
+
+                robot.setArcSpeed(rychlost,rychlost/rotacia);
+                }
+        }
+        else{
+            robot.setTranslationSpeed(0);
+        }
 
 
 
