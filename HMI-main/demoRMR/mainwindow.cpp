@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 
     //tu je napevno nastavena ip. treba zmenit na to co ste si zadali do text boxu alebo nejaku inu pevnu. co bude spravna
-    ipaddress= "192.168.1.14";//192.168.1.11toto je na niektory realny robot.. na lokal budete davat "127.0.0.1"
+    ipaddress= "127.0.0.1";//192.168.1.11toto je na niektory realny robot.. na lokal budete davat "127.0.0.1"
   //  cap.open("http://192.168.1.11:8000/stream.mjpg");
     ui->setupUi(this);
     datacounter=0;
@@ -205,7 +205,7 @@ void MainWindow::on_pushButton_9_clicked() //start button
     robot.setLaserParameters(ipaddress,52999,5299,/*[](LaserMeasurement dat)->int{std::cout<<"som z lambdy callback"<<std::endl;return 0;}*/std::bind(&MainWindow::processThisLidar,this,std::placeholders::_1));
     robot.setRobotParameters(ipaddress,53000,5300,std::bind(&MainWindow::processThisRobot,this,std::placeholders::_1));
     //---simulator ma port 8889, realny robot 8000
-    robot.setCameraParameters("http://"+ipaddress+":8000/stream.mjpg",std::bind(&MainWindow::processThisCamera,this,std::placeholders::_1));
+    robot.setCameraParameters("http://"+ipaddress+":8889/stream.mjpg",std::bind(&MainWindow::processThisCamera,this,std::placeholders::_1));
     robot.setSkeletonParameters("127.0.0.1",23432,23432,std::bind(&MainWindow::processThisSkeleton,this,std::placeholders::_1));
     ///ked je vsetko nasetovane tak to tento prikaz spusti (ak nieco nieje setnute,tak to normalne nenastavi.cize ak napr nechcete kameru,vklude vsetky info o nej vymazte)
     robot.robotStart();
@@ -290,7 +290,8 @@ double Kp = 2000;
 double KpR = 3;
 bool autoMove = false;
 double natocenie = 0.3;
-double rampa = 10;
+double ramVal = 10;
+double rampa = ramVal;
 void MainWindow::zadaniePrve(TKobukiData robotdata){
 
     static unsigned short latestR = robotdata.EncoderRight;
@@ -337,7 +338,7 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
         double rychlost = zasah;
         //rychlost = (double) rychlost * (2*PI-abs(rotacia)+0.1)/2/PI;
-        cout << "rychlost"<< rychlost <<endl;
+        //cout << "rychlost"<< rychlost <<endl;
 
         if(rotacia > 1.5)
             rotacia = 1.5;
@@ -355,7 +356,7 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
 
         //cout<<"error"<<error<<endl;
-        cout<<"rotacia"<<rotacia<<endl;
+       // cout<<"rotacia"<<rotacia<<endl;
 
 /*
         if(abs(rotacia) > natocenie)
@@ -407,9 +408,9 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
         }
 */
-        if(rychlost-rampa > 10){
+        if(rychlost-rampa > ramVal){
 
-            rychlost = rampa+10;
+            rychlost = rampa+ramVal;
 
         }
 
@@ -422,9 +423,10 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
         if(error > 0.03){
 
-            if(abs(rotacia) > (30*PI/180)*KpR){
+            if(abs(rotacia) > (30*PI/180)){
                 cout<<"here"<<endl;
                 robot.setRotationSpeed(rotacia);
+                rampa = 10;
             }
             else{
 
