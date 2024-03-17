@@ -273,7 +273,11 @@ void MainWindow::on_pushButton_clicked()
         ui->pushButton->setText("use laser");
     }
 }
-
+double secCordX;
+double secCordY;
+bool secAutoMove;
+bool deerFlag = false;
+double edgeAngle;
 void MainWindow::getNewFrame()
 {
 
@@ -323,125 +327,115 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
         double theAngle = atan2(yDot,xDot);
         double rotacia = theAngle - fi;
 
-
-
-
         if (rotacia > PI) rotacia = -2*PI+rotacia;
         if (rotacia < -PI) rotacia = 2*PI+rotacia;
         rotacia *= KpR;
-        //if (rotacia > 2*PI) rotacia = 2*PI;
-        //if (rotacia < -2*PI) rotacia = -2*PI;
 
-
-        //cout << "Poletime"<< rotacia <<endl;
         double zasah = Kp*error;
-
         double rychlost = zasah;
-        //rychlost = (double) rychlost * (2*PI-abs(rotacia)+0.1)/2/PI;
-        //cout << "rychlost"<< rychlost <<endl;
+
 
         if(rotacia > 1.5)
             rotacia = 1.5;
-
-
         if(rotacia < -1.5)
             rotacia = -1.5;
-
-
         if(rychlost > 400)
         {
             rychlost = 400;
-
         }
-
-
-        //cout<<"error"<<error<<endl;
-       // cout<<"rotacia"<<rotacia<<endl;
-
-/*
-        if(abs(rotacia) > natocenie)
-        {
-            robot.setRotationSpeed(rotacia);
-
-
-        }
-        else if(abs(rotacia) < natocenie)
-        {
-            natocenie = 1;
-            if (error > 0.03) {
-                robot.setTranslationSpeed(rychlost);
-            }
-            else{
-                robot.setTranslationSpeed(0);
-              //  robot.setRotationSpeed(0);
-                natocenie = 0.3;
-                autoMove = false;
-
-            }
-
-
-        }
-*/
-        /*
-        if(error > 0.03){
-
-            if(abs(rotacia) > natocenie)
-            {
-                robot.setRotationSpeed(rotacia);
-
-
-            }
-            else
-               {
-                natocenie = 1.3;
-                robot.setTranslationSpeed(rychlost);
-               }
-
-
-        }
-        else{
-
-            robot.setTranslationSpeed(0);
-            //  robot.setRotationSpeed(0);
-            natocenie = 0.3;
-            autoMove = false;
-
-        }
-*/
         if(rychlost-rampa > ramVal){
-
             rychlost = rampa+ramVal;
-
         }
-
-
-
-
-
         rampa = rychlost;
 
 
+/////////////////////////////////////////////////// U1
         if(error > 0.03){
-
-            if(abs(rotacia) > (30*PI/180)){
-                cout<<"here"<<endl;
+            if(abs(rotacia) > (30*PI/180)){    // musi sa otočiť
                 robot.setRotationSpeed(rotacia);
                 rampa = 10;
             }
             else{
-
-                robot.setArcSpeed(rychlost,rychlost/rotacia);
-                }
+                robot.setArcSpeed(rychlost,rychlost/rotacia); // ide rovno
+            }
         }
-        else{
+        else{ //došiel
+            robot.setTranslationSpeed(0);
+        }
+//////////////////////////////////////////////////// U2
+
+        /// Natoc sa na ciel
+        /// Ak neni nič pred tebou hoď rovno
+        /// ak je detekuj hranuy
+        /// ak si detekoval hrany vypočitaj kratšiu, natoč sa a choď
+        /// ak si endetekovaj hranu a je prkážka tak sa natoč na stenu a choď rovno po stene
+        /// sleduj stenu do kým za error nezmensi potom opakuj ebod 1
+        ///
+        ///
+        ///
+        if(error > 0.03){
+
+            for (int i=0; i<copyOfLaserData.numberOfScans; i++) {
+
+                int dist=copyOfLaserData.Data[i].scanDistance/20;       //ako daleko je odomna
+                double uhol = 360.0-copyOfLaserData.Data[i].scanAngle;  // aky uhol zvierame
+
+                if(deerFlag == false){ // No deer
+
+                    if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist<30)){  //prekazka
+                        cout<<"found deer"<<endl;
+
+                        //stop
+                        robot.setTranslationSpeed(0);
+                        //find edge
+                        deerFlag = true;
+                    }
+                    else{
+                        //Ideme
+                        if(abs(rotacia) > (30*PI/180)){    // musi sa otočiť
+                            robot.setRotationSpeed(rotacia);
+                            rampa = 10;
+                        }
+                        else{
+                            robot.setArcSpeed(rychlost,rychlost/rotacia); // ide rovno
+                        }
+                    }
+                }
+                else{ // Found deer
+
+                    if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist>35)){
+                        cout<<"found edge"<<endl;
+                        edgeAngle = uhol; // našiel som edge
+                        // natočim sa
+                        cout<<"edge I found"<<edgeAngle<<endl;
+
+                        double x = currentX + dist*cos(fi+(double)(uhol)/180*PI)/1000;
+                        double y = currentY + dist*sin(fi+(double)(uhol)/180*PI)/1000;
+
+                        double theAngle = atan2(y,x);
+                        double rotacia = theAngle - fi;
+                        if (rotacia > PI) rotacia = -2*PI+rotacia;
+                        if (rotacia < -PI) rotacia = 2*PI+rotacia;
+                        rotacia *= KpR;
+                        robot.setRotationSpeed(rotacia);
+                        rampa = 10;
+                        deerFlag = false;
+                    }
+
+                }
+            }
+        }
+
+        else{ //došiel
             robot.setTranslationSpeed(0);
         }
 
 
 
-
+////////////////////////////////////////////////////
 
     }
+
     emit uiValuesChanged(currentX, currentY, fi / PI * 180);
 
 
@@ -481,3 +475,48 @@ void MainWindow::Zadanie3(){
 
 }
 
+
+void MainWindow::on_pushButton_12_clicked()
+{
+    secCordX = ui->lineEdit_7->text().toDouble();
+    secCordY = ui->lineEdit_8->text().toDouble();
+    secAutoMove = true;
+
+}
+
+void MainWindow::zadanieDruhe(TKobukiData robotdata){
+
+
+    for (int i=0; i<copyOfLaserData.numberOfScans; i++) {
+
+        int dist=copyOfLaserData.Data[i].scanDistance/20;       //ako daleko je odomna
+        double uhol = 360.0-copyOfLaserData.Data[i].scanAngle;  // aky uhol zvierame
+        if(deerFlag == false){ // No deer
+
+            if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist<30)){  //prekazka predomnou
+
+                //stop
+                //find edge
+                deerFlag = true;
+            }
+            else{
+                //Ideme
+            }
+        }
+        else{ // Found deer
+
+            if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist>35)){
+
+                edgeAngle = uhol; // našiel som edge
+                // natočim sa
+                deerFlag = false;
+            }
+
+        }
+
+
+
+
+
+    }
+}

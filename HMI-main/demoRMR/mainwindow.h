@@ -52,6 +52,7 @@ public:
     int processThisRobot(TKobukiData robotdata);
     void zadaniePrve(TKobukiData robotdata);
     void Zadanie3();
+    void zadanieDruhe(TKobukiData robotdata);
 
 int processThisCamera(cv::Mat cameraData);
 int processThisSkeleton(skeleton skeledata);
@@ -73,6 +74,8 @@ private slots:
     void getNewFrame();
 
     void on_pushButton_10_clicked();
+
+    void on_pushButton_12_clicked();
 
 private:
 
