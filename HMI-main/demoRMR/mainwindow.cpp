@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 
     //tu je napevno nastavena ip. treba zmenit na to co ste si zadali do text boxu alebo nejaku inu pevnu. co bude spravna
-    ipaddress= "192.168.1.14";//192.168.1.11toto je na niektory realny robot.. na lokal budete davat "127.0.0.1"
+    ipaddress= "127.0.0.1";//192.168.1.11toto je na niektory realny robot.. na lokal budete davat "127.0.0.1"
   //  cap.open("http://192.168.1.11:8000/stream.mjpg");
     ui->setupUi(this);
     datacounter=0;
@@ -392,7 +392,8 @@ void MainWindow::on_pushButton_10_clicked()
     autoMove = true;
 }
 
-#define mapSize 50
+#define mapSize 200
+
 void MainWindow::Zadanie3(){
     if(!ui->pushButton_11->isChecked())
         return;
@@ -405,16 +406,29 @@ void MainWindow::Zadanie3(){
 
 
     for (int i=0; i<copyOfLaserData.numberOfScans; i++) {
-       // if (copyOfLaserData.Data[i].scanDistance < 140) continue;
+       if (copyOfLaserData.Data[i].scanDistance/20 < 7) continue;
         x = currentX + copyOfLaserData.Data[i].scanDistance*cos(fi+(double)(360-copyOfLaserData.Data[i].scanAngle)/180*PI)/1000;
         y = currentY + copyOfLaserData.Data[i].scanDistance*sin(fi+(double)(360-copyOfLaserData.Data[i].scanAngle)/180*PI)/1000;
-        if (map[mapSize+(int)(x*mapSize/6)][mapSize+(int)(y*mapSize/6)] == 0) {
-            map[mapSize+(int)(x*mapSize/6)][mapSize+(int)(y*mapSize/6)] = 1;
+        if (map[mapSize+(int)(x*mapSize/20)][mapSize+(int)(y*mapSize/20)] == 0) {
+            map[mapSize+(int)(x*mapSize/20)][mapSize+(int)(y*mapSize/20)] = 1;
             newData = true;
         }
     }
 
-
+    if (newData) {
+        remove("file.txt");
+        std::ofstream MyFile("file.txt");
+        for (int stlpec=mapSize*2-1; stlpec>=0; stlpec--) {
+            for (int riadok=0; riadok < mapSize*2-1; riadok++) {
+                char character = map[riadok][stlpec] ? '#' : ' ';
+                MyFile << character;
+                // std::cout << character;
+            }
+            MyFile << std::endl;
+            //std::cout << std::endl;
+        }
+        MyFile.close();
+    }
 
 
 }
