@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 
     //tu je napevno nastavena ip. treba zmenit na to co ste si zadali do text boxu alebo nejaku inu pevnu. co bude spravna
-    ipaddress= "127.0.0.1";//192.168.1.11toto je na niektory realny robot.. na lokal budete davat "127.0.0.1"
+    ipaddress= "192.168.1.14";//192.168.1.11toto je na niektory realny robot.. na lokal budete davat "127.0.0.1"
   //  cap.open("http://192.168.1.11:8000/stream.mjpg");
     ui->setupUi(this);
     datacounter=0;
@@ -71,6 +71,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
          //   std::cout<<copyOfLaserData.numberOfScans<<std::endl;
             for(int k=0;k<copyOfLaserData.numberOfScans/*360*/;k++)
             {
+                //cout<<"dist"<<copyOfLaserData.Data[k].scanDistance<<endl;
                 int dist=copyOfLaserData.Data[k].scanDistance/20; ///vzdialenost nahodne predelena 20 aby to nejako vyzeralo v okne.. zmen podla uvazenia
                 int xp=rect.width()-(rect.width()/2+dist*2*sin((360.0-copyOfLaserData.Data[k].scanAngle)*3.14159/180.0))+rect.topLeft().x(); //prepocet do obrazovky
                 int yp=rect.height()-(rect.height()/2+dist*2*cos((360.0-copyOfLaserData.Data[k].scanAngle)*3.14159/180.0))+rect.topLeft().y();//prepocet do obrazovky
@@ -165,6 +166,7 @@ int MainWindow::processThisLidar(LaserMeasurement laserData)
     update();//tento prikaz prinuti prekreslit obrazovku.. zavola sa paintEvent funkcia
 
     Zadanie3();
+
 
     return 0;
 
@@ -296,6 +298,7 @@ bool autoMove = false;
 double natocenie = 0.3;
 double ramVal = 10;
 double rampa = ramVal;
+double rotacia = 0;
 void MainWindow::zadaniePrve(TKobukiData robotdata){
 
     static unsigned short latestR = robotdata.EncoderRight;
@@ -325,7 +328,7 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
         double error = (abs(yDot) + abs(xDot));
         double theAngle = atan2(yDot,xDot);
-        double rotacia = theAngle - fi;
+        rotacia = theAngle - fi;
 
         if (rotacia > PI) rotacia = -2*PI+rotacia;
         if (rotacia < -PI) rotacia = 2*PI+rotacia;
@@ -339,9 +342,9 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
             rotacia = 1.5;
         if(rotacia < -1.5)
             rotacia = -1.5;
-        if(rychlost > 400)
+        if(rychlost > 600)
         {
-            rychlost = 400;
+            rychlost = 600;
         }
         if(rychlost-rampa > ramVal){
             rychlost = rampa+ramVal;
@@ -392,7 +395,7 @@ void MainWindow::on_pushButton_10_clicked()
     autoMove = true;
 }
 
-#define mapSize 200
+#define mapSize 60
 
 void MainWindow::Zadanie3(){
     if(!ui->pushButton_11->isChecked())
@@ -404,13 +407,19 @@ void MainWindow::Zadanie3(){
     static double latestAngle = fi;
     bool newData = false;
 
+    if(abs(rotacia) > (10*PI/180)){    // musi sa otočiť
+        return;
+    }
+
 
     for (int i=0; i<copyOfLaserData.numberOfScans; i++) {
-       if (copyOfLaserData.Data[i].scanDistance/20 < 7) continue;
+
+        if ((copyOfLaserData.Data[i].scanDistance < 160 ) && (copyOfLaserData.Data[i].scanDistance > 2000) ) continue;
+        if ((copyOfLaserData.Data[i].scanDistance > 600 ) && (copyOfLaserData.Data[i].scanDistance < 800) ) continue;
         x = currentX + copyOfLaserData.Data[i].scanDistance*cos(fi+(double)(360-copyOfLaserData.Data[i].scanAngle)/180*PI)/1000;
         y = currentY + copyOfLaserData.Data[i].scanDistance*sin(fi+(double)(360-copyOfLaserData.Data[i].scanAngle)/180*PI)/1000;
-        if (map[mapSize+(int)(x*mapSize/20)][mapSize+(int)(y*mapSize/20)] == 0) {
-            map[mapSize+(int)(x*mapSize/20)][mapSize+(int)(y*mapSize/20)] = 1;
+        if (map[mapSize+(int)(x*mapSize/6)][mapSize+(int)(y*mapSize/6)] == 0) {
+            map[mapSize+(int)(x*mapSize/6)][mapSize+(int)(y*mapSize/6)] = 1;
             newData = true;
         }
     }
