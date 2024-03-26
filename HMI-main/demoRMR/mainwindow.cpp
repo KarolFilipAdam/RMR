@@ -414,8 +414,9 @@ void MainWindow::Zadanie3(){
 
     for (int i=0; i<copyOfLaserData.numberOfScans; i++) {
 
-        if ((copyOfLaserData.Data[i].scanDistance < 160 ) && (copyOfLaserData.Data[i].scanDistance > 2000) ) continue;
+        if ((copyOfLaserData.Data[i].scanDistance < 160 ) || (copyOfLaserData.Data[i].scanDistance > 2000) ) continue;
         if ((copyOfLaserData.Data[i].scanDistance > 600 ) && (copyOfLaserData.Data[i].scanDistance < 800) ) continue;
+
         x = currentX + copyOfLaserData.Data[i].scanDistance*cos(fi+(double)(360-copyOfLaserData.Data[i].scanAngle)/180*PI)/1000;
         y = currentY + copyOfLaserData.Data[i].scanDistance*sin(fi+(double)(360-copyOfLaserData.Data[i].scanAngle)/180*PI)/1000;
         if (map[mapSize+(int)(x*mapSize/6)][mapSize+(int)(y*mapSize/6)] == 0) {
