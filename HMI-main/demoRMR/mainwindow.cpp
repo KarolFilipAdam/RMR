@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 
     //tu je napevno nastavena ip. treba zmenit na to co ste si zadali do text boxu alebo nejaku inu pevnu. co bude spravna
-    ipaddress= "192.168.1.14";//192.168.1.11toto je na niektory realny robot.. na lokal budete davat "127.0.0.1"
+    ipaddress= "127.0.0.1";//192.168.1.11toto je na niektory realny robot.. na lokal budete davat "127.0.0.1"
   //  cap.open("http://192.168.1.11:8000/stream.mjpg");
     ui->setupUi(this);
     datacounter=0;
@@ -430,7 +430,7 @@ void MainWindow::Zadanie3(){
         std::ofstream MyFile("file.txt");
         for (int stlpec=mapSize*2-1; stlpec>=0; stlpec--) {
             for (int riadok=0; riadok < mapSize*2-1; riadok++) {
-                char character = map[riadok][stlpec] ? '#' : ' ';
+                char character = map[riadok][stlpec] ? '#' : '0';
                 MyFile << character;
                 // std::cout << character;
             }
