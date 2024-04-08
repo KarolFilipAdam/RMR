@@ -22,8 +22,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_MainWindow_t {
-    QByteArrayData data[20];
-    char stringdata0[321];
+    QByteArrayData data[21];
+    char stringdata0[346];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -48,10 +48,11 @@ QT_MOC_LITERAL(12, 203, 21), // "on_pushButton_clicked"
 QT_MOC_LITERAL(13, 225, 11), // "getNewFrame"
 QT_MOC_LITERAL(14, 237, 24), // "on_pushButton_10_clicked"
 QT_MOC_LITERAL(15, 262, 24), // "on_pushButton_12_clicked"
-QT_MOC_LITERAL(16, 287, 11), // "setUiValues"
-QT_MOC_LITERAL(17, 299, 6), // "robotX"
-QT_MOC_LITERAL(18, 306, 6), // "robotY"
-QT_MOC_LITERAL(19, 313, 7) // "robotFi"
+QT_MOC_LITERAL(16, 287, 24), // "on_pushButton_13_clicked"
+QT_MOC_LITERAL(17, 312, 11), // "setUiValues"
+QT_MOC_LITERAL(18, 324, 6), // "robotX"
+QT_MOC_LITERAL(19, 331, 6), // "robotY"
+QT_MOC_LITERAL(20, 338, 7) // "robotFi"
 
     },
     "MainWindow\0uiValuesChanged\0\0newrobotX\0"
@@ -60,7 +61,8 @@ QT_MOC_LITERAL(19, 313, 7) // "robotFi"
     "on_pushButton_6_clicked\0on_pushButton_5_clicked\0"
     "on_pushButton_4_clicked\0on_pushButton_clicked\0"
     "getNewFrame\0on_pushButton_10_clicked\0"
-    "on_pushButton_12_clicked\0setUiValues\0"
+    "on_pushButton_12_clicked\0"
+    "on_pushButton_13_clicked\0setUiValues\0"
     "robotX\0robotY\0robotFi"
 };
 #undef QT_MOC_LITERAL
@@ -71,7 +73,7 @@ static const uint qt_meta_data_MainWindow[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-      12,   14, // methods
+      13,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -79,20 +81,21 @@ static const uint qt_meta_data_MainWindow[] = {
        1,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    3,   74,    2, 0x06 /* Public */,
+       1,    3,   79,    2, 0x06 /* Public */,
 
  // slots: name, argc, parameters, tag, flags
-       6,    0,   81,    2, 0x08 /* Private */,
-       7,    0,   82,    2, 0x08 /* Private */,
-       8,    0,   83,    2, 0x08 /* Private */,
-       9,    0,   84,    2, 0x08 /* Private */,
-      10,    0,   85,    2, 0x08 /* Private */,
-      11,    0,   86,    2, 0x08 /* Private */,
-      12,    0,   87,    2, 0x08 /* Private */,
-      13,    0,   88,    2, 0x08 /* Private */,
-      14,    0,   89,    2, 0x08 /* Private */,
-      15,    0,   90,    2, 0x08 /* Private */,
-      16,    3,   91,    2, 0x0a /* Public */,
+       6,    0,   86,    2, 0x08 /* Private */,
+       7,    0,   87,    2, 0x08 /* Private */,
+       8,    0,   88,    2, 0x08 /* Private */,
+       9,    0,   89,    2, 0x08 /* Private */,
+      10,    0,   90,    2, 0x08 /* Private */,
+      11,    0,   91,    2, 0x08 /* Private */,
+      12,    0,   92,    2, 0x08 /* Private */,
+      13,    0,   93,    2, 0x08 /* Private */,
+      14,    0,   94,    2, 0x08 /* Private */,
+      15,    0,   95,    2, 0x08 /* Private */,
+      16,    0,   96,    2, 0x08 /* Private */,
+      17,    3,   97,    2, 0x0a /* Public */,
 
  // signals: parameters
     QMetaType::Void, QMetaType::Double, QMetaType::Double, QMetaType::Double,    3,    4,    5,
@@ -108,7 +111,8 @@ static const uint qt_meta_data_MainWindow[] = {
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Double, QMetaType::Double, QMetaType::Double,   17,   18,   19,
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::Double, QMetaType::Double, QMetaType::Double,   18,   19,   20,
 
        0        // eod
 };
@@ -130,7 +134,8 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 8: _t->getNewFrame(); break;
         case 9: _t->on_pushButton_10_clicked(); break;
         case 10: _t->on_pushButton_12_clicked(); break;
-        case 11: _t->setUiValues((*reinterpret_cast< double(*)>(_a[1])),(*reinterpret_cast< double(*)>(_a[2])),(*reinterpret_cast< double(*)>(_a[3]))); break;
+        case 11: _t->on_pushButton_13_clicked(); break;
+        case 12: _t->setUiValues((*reinterpret_cast< double(*)>(_a[1])),(*reinterpret_cast< double(*)>(_a[2])),(*reinterpret_cast< double(*)>(_a[3]))); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
@@ -174,13 +179,13 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 12)
+        if (_id < 13)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 12;
+        _id -= 13;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 12)
+        if (_id < 13)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 12;
+        _id -= 13;
     }
     return _id;
 }

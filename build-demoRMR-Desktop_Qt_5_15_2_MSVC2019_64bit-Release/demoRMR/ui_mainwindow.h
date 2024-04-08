@@ -55,6 +55,10 @@ public:
     QLineEdit *lineEdit_7;
     QLineEdit *lineEdit_8;
     QPushButton *pushButton_12;
+    QHBoxLayout *horizontalLayout_3;
+    QLineEdit *lineEdit_9;
+    QLineEdit *lineEdit_10;
+    QPushButton *pushButton_13;
     QSpacerItem *verticalSpacer;
     QGridLayout *gridLayout_3;
     QLabel *label_3;
@@ -235,6 +239,27 @@ public:
 
         verticalLayout_2->addLayout(horizontalLayout);
 
+        horizontalLayout_3 = new QHBoxLayout();
+        horizontalLayout_3->setSpacing(6);
+        horizontalLayout_3->setObjectName(QString::fromUtf8("horizontalLayout_3"));
+        lineEdit_9 = new QLineEdit(centralWidget);
+        lineEdit_9->setObjectName(QString::fromUtf8("lineEdit_9"));
+
+        horizontalLayout_3->addWidget(lineEdit_9);
+
+        lineEdit_10 = new QLineEdit(centralWidget);
+        lineEdit_10->setObjectName(QString::fromUtf8("lineEdit_10"));
+
+        horizontalLayout_3->addWidget(lineEdit_10);
+
+        pushButton_13 = new QPushButton(centralWidget);
+        pushButton_13->setObjectName(QString::fromUtf8("pushButton_13"));
+
+        horizontalLayout_3->addWidget(pushButton_13);
+
+
+        verticalLayout_2->addLayout(horizontalLayout_3);
+
         verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
         verticalLayout_2->addItem(verticalSpacer);
@@ -322,6 +347,7 @@ public:
         pushButton_7->setText(QCoreApplication::translate("MainWindow", "Reset Laser", nullptr));
         pushButton_11->setText(QCoreApplication::translate("MainWindow", "3", nullptr));
         pushButton_12->setText(QCoreApplication::translate("MainWindow", "uloha2", nullptr));
+        pushButton_13->setText(QCoreApplication::translate("MainWindow", "4", nullptr));
         label_3->setText(QCoreApplication::translate("MainWindow", "Rot:", nullptr));
         label_2->setText(QCoreApplication::translate("MainWindow", "Y:", nullptr));
         label->setText(QCoreApplication::translate("MainWindow", "X:", nullptr));

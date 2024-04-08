@@ -166,7 +166,7 @@ int MainWindow::processThisLidar(LaserMeasurement laserData)
     update();//tento prikaz prinuti prekreslit obrazovku.. zavola sa paintEvent funkcia
 
     Zadanie3();
-
+    zad4();
 
     return 0;
 
@@ -488,3 +488,148 @@ void MainWindow::zadanieDruhe(TKobukiData robotdata){
 
     }
 }
+
+
+
+
+
+
+
+
+
+#define size 60
+int space[size*2][size*2];
+bool uloha4_Running = false;
+double floodX = 0;
+double floodY = 0;
+
+
+
+void MainWindow::zad4() {
+    if (!uloha4_Running) return;
+    static double prevFi = fi;
+    if (abs(prevFi-fi) > 0.001) {
+        prevFi = fi;
+        return;
+    }
+    prevFi = fi;
+    if (destinationReached) {
+        if (abs(floodX-currentX) + abs(floodY-currentY) < 0.15) {
+            std::cout << "Uloha 4 uspesna" << std::endl;
+            uloha4_Running = false;
+        } else {
+            int minValue = space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)];
+            double minX = 0;
+            double minY = 0;
+            double centerX;
+            double centerY;
+            for (int stlpec=0; stlpec < size*2-1; stlpec++) {
+                for (int riadok=0; riadok < size*2-1; riadok++) {
+                    centerX = (double) 6*riadok/size - 6 + (double) 6/size/2;
+                    centerY = (double) 6*stlpec/size - 6 + (double) 6/size/2;
+                    if (space[riadok][stlpec] < minValue && space[riadok][stlpec] > 1 && isReachable(centerX, centerY)) {
+                        minValue = space[riadok][stlpec];
+                        minX = centerX;
+                        minY = centerY;
+                        std::cout << centerX << ", " << centerY << " (" << riadok << ", " << stlpec << "): " << space[riadok][stlpec] << std::endl;
+                    }
+                }
+            }
+            if (minValue == 2) {
+                cordX = floodX;
+                cordY = floodY;
+            } else {
+                cordX = minX;
+                cordY = minY;
+            }
+
+            destinationReached = false;
+            std::cout << "New reachable position: " << cordX << ", " << cordY << std::endl;
+        }
+    }
+}
+
+void MainWindow::on_pushButton_13_clicked()
+{
+    floodX = ui->lineEdit_7->text().toDouble();
+    floodY = ui->lineEdit_8->text().toDouble();
+
+
+    // nacitavanie zo suboru
+    FILE* MyFile = fopen("file.txt", "r");
+    cout<<"otvorene"<<endl;
+    for (int stlpec=size*2-1; stlpec>=0; stlpec--) {
+
+        for (int riadok=0; riadok < size*2-1; riadok++) {
+            space[riadok][stlpec] = getc(MyFile) == '#';
+        }
+        getc(MyFile); // Precitat \n
+
+    }
+    fclose(MyFile);
+
+    //rozsirenie o polomer robota
+    for (int stlpec=0; stlpec < size*2-1; stlpec++) {
+        for (int riadok=0; riadok < size*2-1; riadok++) {
+            if (space[riadok][stlpec] == 1) {
+                for (int offX = -2; offX <= 2; offX++) {
+                    for (int offY = -2; offY <= 2; offY++) {
+                        if (space[riadok+offX][stlpec+offY] == 0) space[riadok+offX][stlpec+offY] = 2; // nieco ine ako 1 aby nenastal flood
+                    }
+                }
+            }
+        }
+    }
+    //oprava z 2 na 1
+    for (int stlpec=0; stlpec < size*2-1; stlpec++) {
+        for (int riadok=0; riadok < size*2-1; riadok++) {
+            if (space[riadok][stlpec] == 2) space[riadok][stlpec] = 1;
+        }
+    }
+
+    // oznacenie mapy
+    double x = ui->lineEdit_7->text().toDouble();
+    double y = ui->lineEdit_8->text().toDouble();
+    space[size+(int)(x*size/6)][size+(int)(y*size/6)] = 2;
+    int mark = 3;
+    while (space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)] == 0) {
+        bool change = false;
+        for (int stlpec=0; stlpec < size*2-1; stlpec++) {
+            for (int riadok=0; riadok < size*2-1; riadok++) {
+                if (space[riadok][stlpec] == mark-1) {
+                    for (int offX = -1; offX <= 1; offX++) {
+                        for (int offY = -1; offY <= 1; offY++) {
+                            if (space[riadok+offX][stlpec+offY] == 0) {
+                                space[riadok+offX][stlpec+offY] = mark;
+                                change = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (!change) {
+            std::cout << "Target is not reachable" << std::endl;
+            break;
+        }
+
+        mark++;
+    }
+
+    // vypis do konzole pre kontrolu
+    for (int stlpec=size*2-1; stlpec>=0; stlpec--) {
+        for (int riadok=size-5; riadok < size*2-1; riadok++) {
+            if (space[riadok][stlpec] < 2) {
+                std::cout << " ";
+                std::cout << (space[riadok][stlpec] ? '#' : ' ');
+            } else {
+                if (space[riadok][stlpec] < 10) std::cout << " ";
+                std::cout << space[riadok][stlpec];
+            }
+        }
+        std::cout << std::endl;
+    }
+    destinationReached = false;
+    uloha4_Running = true;
+}
+
