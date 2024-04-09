@@ -299,6 +299,7 @@ double natocenie = 0.3;
 double ramVal = 10;
 double rampa = ramVal;
 double rotacia = 0;
+
 void MainWindow::zadaniePrve(TKobukiData robotdata){
 
     static unsigned short latestR = robotdata.EncoderRight;
@@ -492,115 +493,133 @@ void MainWindow::zadanieDruhe(TKobukiData robotdata){
 
 
 
+bool MainWindow::analyzeReach(double targetX, double targetY) {  // can I reach these ?
+    double xDiff = targetX - currentX;
+    double yDiff = targetY - currentY;
+    double desiredAngle = atan2(yDiff, xDiff);
+    double distance = sqrt(xDiff*xDiff + yDiff*yDiff)*1000;
+    for (int i=0; i<copyOfLaserData.numberOfScans; i++) {
+        if (copyOfLaserData.Data[i].scanDistance < 150) continue; // 150 mm invladi
+        double angle = -(2*PI-((double)copyOfLaserData.Data[i].scanAngle/180*PI))+desiredAngle-fi;
+        while (angle < -PI) angle += 2*PI;
+        while (angle > PI) angle -= 2*PI;  // make sure  -p p
+        if (abs(angle) > 0.5*PI) continue; // only chceck front
+        double treshold = 600; // treshold pod týmto ne
+        if (angle < 0.01 && copyOfLaserData.Data[i].scanDistance < distance) return false;
+        if (copyOfLaserData.Data[i].scanDistance < distance && copyOfLaserData.Data[i].scanDistance < (double) treshold / (2*abs(sin(angle)))) {
+            return false;
 
+        }
+    }
+    return true;
+}
 
 
 
 
 #define size 60
 int space[size*2][size*2];
-bool uloha4_Running = false;
+bool flagZ4 = false;
 double floodX = 0;
 double floodY = 0;
 
 
 
 void MainWindow::zad4() {
-    if (!uloha4_Running) return;
+    if (!flagZ4) return;
     static double prevFi = fi;
     if (abs(prevFi-fi) > 0.001) {
         prevFi = fi;
         return;
     }
     prevFi = fi;
-    if (destinationReached) {
+
+    if (!autoMove) {
+
         if (abs(floodX-currentX) + abs(floodY-currentY) < 0.15) {
-            std::cout << "Uloha 4 uspesna" << std::endl;
-            uloha4_Running = false;
+            flagZ4 = false;
+            cout << "end" << endl;
+
         } else {
-            int minValue = space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)];
-            double minX = 0;
-            double minY = 0;
-            double centerX;
-            double centerY;
-            for (int stlpec=0; stlpec < size*2-1; stlpec++) {
-                for (int riadok=0; riadok < size*2-1; riadok++) {
-                    centerX = (double) 6*riadok/size - 6 + (double) 6/size/2;
-                    centerY = (double) 6*stlpec/size - 6 + (double) 6/size/2;
-                    if (space[riadok][stlpec] < minValue && space[riadok][stlpec] > 1 && isReachable(centerX, centerY)) {
-                        minValue = space[riadok][stlpec];
-                        minX = centerX;
-                        minY = centerY;
-                        std::cout << centerX << ", " << centerY << " (" << riadok << ", " << stlpec << "): " << space[riadok][stlpec] << std::endl;
+            int locMin = space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)];
+            double forX = 0;
+            double forY = 0;
+            double midPointX;
+            double midPointY;
+            for (int col=0; col < size*2-1; col++) {
+                for (int row=0; row < size*2-1; row++) {
+                    midPointX = (double) 6*row/size - 6 + (double) 6/size/2;
+                    midPointY = (double) 6*col/size - 6 + (double) 6/size/2;
+                    if (space[row][col] < locMin && space[row][col] > 1 && analyzeReach(midPointX, midPointY)) {
+                        locMin = space[row][col];
+                        forX = midPointX;
+                        forY = midPointY;
+                        //cout << midPointX << ", " << midPointY << " (" << row << ", " << col << "): " << space[row][col] <<endl;
                     }
                 }
             }
-            if (minValue == 2) {
+            if (locMin == 2) {  // start
                 cordX = floodX;
                 cordY = floodY;
             } else {
-                cordX = minX;
-                cordY = minY;
+                cordX = forX;
+                cordY = forY;
             }
-
-            destinationReached = false;
-            std::cout << "New reachable position: " << cordX << ", " << cordY << std::endl;
+            cout << "new position: " << cordX << ", " << cordY <<endl;
+            autoMove = true;
         }
     }
 }
 
 void MainWindow::on_pushButton_13_clicked()
 {
-    floodX = ui->lineEdit_7->text().toDouble();
-    floodY = ui->lineEdit_8->text().toDouble();
+    floodX = ui->lineEdit_9->text().toDouble();
+    floodY = ui->lineEdit_10->text().toDouble();
 
 
-    // nacitavanie zo suboru
-    FILE* MyFile = fopen("file.txt", "r");
+
+    FILE* MyFile = fopen("file.txt", "r");  // red file
     cout<<"otvorene"<<endl;
-    for (int stlpec=size*2-1; stlpec>=0; stlpec--) {
-
-        for (int riadok=0; riadok < size*2-1; riadok++) {
-            space[riadok][stlpec] = getc(MyFile) == '#';
+    for (int col=size*2-1; col>=0; col--) {
+        for (int row=0; row < size*2-1; row++) {
+            space[row][col] = getc(MyFile) == '#';
         }
         getc(MyFile); // Precitat \n
-
     }
     fclose(MyFile);
 
-    //rozsirenie o polomer robota
-    for (int stlpec=0; stlpec < size*2-1; stlpec++) {
-        for (int riadok=0; riadok < size*2-1; riadok++) {
-            if (space[riadok][stlpec] == 1) {
-                for (int offX = -2; offX <= 2; offX++) {
-                    for (int offY = -2; offY <= 2; offY++) {
-                        if (space[riadok+offX][stlpec+offY] == 0) space[riadok+offX][stlpec+offY] = 2; // nieco ine ako 1 aby nenastal flood
-                    }
+
+    for (int col=0; col < size*2-1; col++) {  // robot radius
+        for (int row=0; row < size*2-1; row++) {
+            if (space[row][col] == 1) {
+                for (int padX = -2; padX <= 2; padX++) {
+                    for (int padY = -2; padY <= 2; padY++) {
+                        if (space[row+padY][col+padY] == 0) space[row+padX][col+padY] = 2;
+                    } // 5x5 padding filter
                 }
             }
         }
     }
-    //oprava z 2 na 1
-    for (int stlpec=0; stlpec < size*2-1; stlpec++) {
-        for (int riadok=0; riadok < size*2-1; riadok++) {
-            if (space[riadok][stlpec] == 2) space[riadok][stlpec] = 1;
+    for (int col=0; col < size*2-1; col++) {
+        for (int row=0; row < size*2-1; row++) {
+            if (space[row][col] == 2) space[row][col] = 1;
         }
-    }
+    } // adjust map
 
     // oznacenie mapy
-    double x = ui->lineEdit_7->text().toDouble();
-    double y = ui->lineEdit_8->text().toDouble();
+    double x = ui->lineEdit_9->text().toDouble();
+    double y = ui->lineEdit_10->text().toDouble();
     space[size+(int)(x*size/6)][size+(int)(y*size/6)] = 2;
     int mark = 3;
     while (space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)] == 0) {
         bool change = false;
-        for (int stlpec=0; stlpec < size*2-1; stlpec++) {
-            for (int riadok=0; riadok < size*2-1; riadok++) {
-                if (space[riadok][stlpec] == mark-1) {
+        for (int col=0; col < size*2-1; col++) {
+            for (int row=0; row < size*2-1; row++) {
+                if (space[row][col] == mark-1) {
                     for (int offX = -1; offX <= 1; offX++) {
                         for (int offY = -1; offY <= 1; offY++) {
-                            if (space[riadok+offX][stlpec+offY] == 0) {
-                                space[riadok+offX][stlpec+offY] = mark;
+                            if (space[row+offX][col+offY] == 0) {
+                                space[row+offX][col+offY] = mark;
                                 change = true;
                             }
                         }
@@ -609,7 +628,7 @@ void MainWindow::on_pushButton_13_clicked()
             }
         }
         if (!change) {
-            std::cout << "Target is not reachable" << std::endl;
+            cout << "Target is not reachable" <<endl;
             break;
         }
 
@@ -617,19 +636,19 @@ void MainWindow::on_pushButton_13_clicked()
     }
 
     // vypis do konzole pre kontrolu
-    for (int stlpec=size*2-1; stlpec>=0; stlpec--) {
-        for (int riadok=size-5; riadok < size*2-1; riadok++) {
-            if (space[riadok][stlpec] < 2) {
-                std::cout << " ";
-                std::cout << (space[riadok][stlpec] ? '#' : ' ');
+    for (int col=size*2-1; col>=0; col--) {
+        for (int row=size-5; row < size*2-1; row++) {
+            if (space[row][col] < 2) {
+                cout << " ";
+                cout << (space[row][col] ? '#' : ' ');
             } else {
-                if (space[riadok][stlpec] < 10) std::cout << " ";
-                std::cout << space[riadok][stlpec];
+                if (space[row][col] < 10) cout << " ";
+                cout << space[row][col];
             }
         }
-        std::cout << std::endl;
+        cout <<endl;
     }
-    destinationReached = false;
-    uloha4_Running = true;
+    autoMove = true;
+    flagZ4 = true;
 }
 

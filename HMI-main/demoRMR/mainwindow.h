@@ -54,6 +54,7 @@ public:
     void Zadanie3();
     void zadanieDruhe(TKobukiData robotdata);
     void zad4();
+    bool analyzeReach(double targetX, double targetY);
 
 int processThisCamera(cv::Mat cameraData);
 int processThisSkeleton(skeleton skeledata);
