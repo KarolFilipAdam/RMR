@@ -594,7 +594,7 @@ void MainWindow::on_pushButton_13_clicked()
             if (space[row][col] == 1) {
                 for (int padX = -2; padX <= 2; padX++) {
                     for (int padY = -2; padY <= 2; padY++) {
-                        if (space[row+padY][col+padY] == 0) space[row+padX][col+padY] = 2;
+                        if (space[row+padX][col+padY] == 0) space[row+padX][col+padY] = 2;
                     } // 5x5 padding filter
                 }
             }
