@@ -81,20 +81,6 @@ void MainWindow::paintEvent(QPaintEvent *event)
                     painter.drawEllipse(QPoint(xp, yp),2,2);
 
 
-                if(deerFlag == false){ // No deer
-
-                    if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist<30)){  //prekazka predomnou
-                        cout<<"ZASTAV"<<endl;
-                        autoMove = false;
-                        deerFlag = true;
-                    }
-                    else continue;
-
-                }
-                if(deerFlag)
-                    zadanieDruhe(uhol, dist);
-
-
 
             }
         }
@@ -458,9 +444,7 @@ void MainWindow::Zadanie3(){
 
 void MainWindow::on_pushButton_12_clicked()
 {
-    cordX = ui->lineEdit_7->text().toDouble();
-    cordY = ui->lineEdit_8->text().toDouble();
-    autoMove = true;
+    return;
 
 }
 
