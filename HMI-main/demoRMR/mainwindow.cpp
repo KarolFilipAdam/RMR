@@ -38,7 +38,8 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
-
+bool deerFlag = false;
+bool autoMove = false;
 void MainWindow::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
@@ -73,24 +74,32 @@ void MainWindow::paintEvent(QPaintEvent *event)
             {
                 //cout<<"dist"<<copyOfLaserData.Data[k].scanDistance<<endl;
                 int dist=copyOfLaserData.Data[k].scanDistance/20; ///vzdialenost nahodne predelena 20 aby to nejako vyzeralo v okne.. zmen podla uvazenia
+                double uhol = 360.0-copyOfLaserData.Data[k].scanAngle;  // aky uhol zvierame
                 int xp=rect.width()-(rect.width()/2+dist*2*sin((360.0-copyOfLaserData.Data[k].scanAngle)*3.14159/180.0))+rect.topLeft().x(); //prepocet do obrazovky
                 int yp=rect.height()-(rect.height()/2+dist*2*cos((360.0-copyOfLaserData.Data[k].scanAngle)*3.14159/180.0))+rect.topLeft().y();//prepocet do obrazovky
                 if(rect.contains(xp,yp))//ak je bod vo vnutri nasho obdlznika tak iba vtedy budem chciet kreslit
                     painter.drawEllipse(QPoint(xp, yp),2,2);
+
+
+                if(deerFlag == false){ // No deer
+
+                    if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist<30)){  //prekazka predomnou
+                        cout<<"ZASTAV"<<endl;
+                        autoMove = false;
+                        deerFlag = true;
+                    }
+                    else continue;
+
+                }
+                if(deerFlag)
+                    zadanieDruhe(uhol, dist);
+
+
+
             }
         }
     }
-    if(updateSkeletonPicture==1 )
-    {
-        painter.setPen(Qt::red);
-        for(int i=0;i<75;i++)
-        {
-            int xp=rect.width()-rect.width() * skeleJoints.joints[i].x+rect.topLeft().x();
-            int yp= (rect.height() *skeleJoints.joints[i].y)+rect.topLeft().y();
-            if(rect.contains(xp,yp))
-                painter.drawEllipse(QPoint(xp, yp),2,2);
-        }
-    }
+
 }
 
 
@@ -278,7 +287,7 @@ void MainWindow::on_pushButton_clicked()
 double secCordX;
 double secCordY;
 bool secAutoMove;
-bool deerFlag = false;
+
 double edgeAngle;
 void MainWindow::getNewFrame()
 {
@@ -294,7 +303,7 @@ long double tickToMeter = 0.000085292090497737556558; // [m/tick]
 long double b = 0.23; // wheelbase distance in meters, from kobuki manual https://yujinrobot.github.io/kobuki/doxygen/enAppendixProtocolSpecification.html
 double Kp = 2000;
 double KpR = 3;
-bool autoMove = false;
+
 double natocenie = 0.3;
 double ramVal = 10;
 double rampa = ramVal;
@@ -383,6 +392,8 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 ////////////////////////////////////////////////////
 
     }
+    else
+        robot.setTranslationSpeed(0);
 
     emit uiValuesChanged(currentX, currentY, fi / PI * 180);
 
@@ -447,47 +458,25 @@ void MainWindow::Zadanie3(){
 
 void MainWindow::on_pushButton_12_clicked()
 {
-    secCordX = ui->lineEdit_7->text().toDouble();
-    secCordY = ui->lineEdit_8->text().toDouble();
-    secAutoMove = true;
+    cordX = ui->lineEdit_7->text().toDouble();
+    cordY = ui->lineEdit_8->text().toDouble();
+    autoMove = true;
 
 }
 
-void MainWindow::zadanieDruhe(TKobukiData robotdata){
-
-
-    for (int i=0; i<copyOfLaserData.numberOfScans; i++) {
-
-        int dist=copyOfLaserData.Data[i].scanDistance/20;       //ako daleko je odomna
-        double uhol = 360.0-copyOfLaserData.Data[i].scanAngle;  // aky uhol zvierame
-        if(deerFlag == false){ // No deer
-
-            if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist<30)){  //prekazka predomnou
-
-                //stop
-                //find edge
-                deerFlag = true;
-            }
-            else{
-                //Ideme
-            }
-        }
-        else{ // Found deer
-
-            if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist>35)){
-
-                edgeAngle = uhol; // našiel som edge
-                // natočim sa
-                deerFlag = false;
-            }
-
-        }
+void MainWindow::zadanieDruhe(double uhol, int dist){
 
 
 
 
+    if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist>35)){
+
+        edgeAngle = uhol; // našiel som edge
 
     }
+
+
+
 }
 
 
