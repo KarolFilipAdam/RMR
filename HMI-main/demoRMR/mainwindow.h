@@ -52,7 +52,7 @@ public:
     int processThisRobot(TKobukiData robotdata);
     void zadaniePrve(TKobukiData robotdata);
     void Zadanie3();
-    void zadanieDruhe(double uhol, int dist);
+    void zadanieDruhe();
     void zad4();
     bool analyzeReach(double targetX, double targetY);
 

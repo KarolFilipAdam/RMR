@@ -40,6 +40,8 @@ MainWindow::~MainWindow()
 }
 bool deerFlag = false;
 bool autoMove = false;
+bool distanceFromGoal;
+double error;
 void MainWindow::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
@@ -79,23 +81,6 @@ void MainWindow::paintEvent(QPaintEvent *event)
                 int yp=rect.height()-(rect.height()/2+dist*2*cos((360.0-copyOfLaserData.Data[k].scanAngle)*3.14159/180.0))+rect.topLeft().y();//prepocet do obrazovky
                 if(rect.contains(xp,yp))//ak je bod vo vnutri nasho obdlznika tak iba vtedy budem chciet kreslit
                     painter.drawEllipse(QPoint(xp, yp),2,2);
-
-
-                if(deerFlag == false){ // No deer
-
-                    if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist<30)){  //prekazka predomnou
-                        cout<<"ZASTAV"<<endl;
-                        autoMove = false;
-                        deerFlag = true;
-                    }
-                    else continue;
-
-                }
-                if(deerFlag)
-                    zadanieDruhe(uhol, dist);
-
-
-
             }
         }
     }
@@ -175,6 +160,7 @@ int MainWindow::processThisLidar(LaserMeasurement laserData)
     update();//tento prikaz prinuti prekreslit obrazovku.. zavola sa paintEvent funkcia
 
     Zadanie3();
+    zadanieDruhe();
     zad4();
 
     return 0;
@@ -336,7 +322,7 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
     if(autoMove){
 
-        double error = (abs(yDot) + abs(xDot));
+        error = (abs(yDot) + abs(xDot));
         double theAngle = atan2(yDot,xDot);
         rotacia = theAngle - fi;
 
@@ -463,17 +449,72 @@ void MainWindow::on_pushButton_12_clicked()
     autoMove = true;
 
 }
+bool edgeFlag = false;
+bool wallFlag = false;
+void MainWindow::zadanieDruhe(){
 
-void MainWindow::zadanieDruhe(double uhol, int dist){
+    for(int k=0;k<copyOfLaserData.numberOfScans/*360*/;k++)
+    {
+        //cout<<"dist"<<copyOfLaserData.Data[k].scanDistance<<endl;
+        int dist=copyOfLaserData.Data[k].scanDistance/20; ///vzdialenost nahodne predelena 20 aby to nejako vyzeralo v okne.. zmen podla uvazenia
+        double uhol = 360.0-copyOfLaserData.Data[k].scanAngle;  // aky uhol zvierame
 
 
 
+        if(deerFlag == false){ // No deer
 
-    if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist>35)){
+            if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist<30)){  //prekazka predomnou
+                cout<<"ZASTAV"<<endl;
+                autoMove = false;
+                distanceFromGoal = error;
+                deerFlag = true;
+            }
+            else continue;
 
-        edgeAngle = uhol; // našiel som edge
+        }
+
+        else{
+
+            if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist>35)){
+
+                edgeAngle = uhol; // našiel som edge
+
+
+                double x = currentX + dist*20*cos(fi+(double)(uhol)/180*PI)/1000;
+                double y = currentY + dist*20*sin(fi+(double)(uhol)/180*PI)/1000;
+
+                double  checkDistance = (abs(x) + abs(y));
+                cout<<checkDistance<<" "<<error<<" here"<<endl;
+                cout<<"x "<<x<<"y "<<y<<" "<<endl;
+
+                if(checkDistance < error){
+                    cout<<"mensi uhol"<<endl;
+                    edgeFlag = true;
+                    wallFlag = false;
+                    cordX = x;
+                    cordY = y;
+                    autoMove = true;
+                }
+                else{
+
+                    wallFlag = true;
+                }
+            }
+
+            else
+                edgeFlag = false;
+
+            }
 
     }
+
+    if(!edgeFlag && deerFlag){
+
+       // cout<<"stena"<<endl;
+    }
+
+
+
 
 
 
