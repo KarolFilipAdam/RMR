@@ -500,13 +500,14 @@ double floodY = 0;
 
 void MainWindow::zad4() {
     if (!flagZ4) return;
+    /*
     static double prevFi = fi;
     if (abs(prevFi-fi) > 0.001) {
         prevFi = fi;
         return;
     }
     prevFi = fi;
-
+*/
     if (!autoMove) {
 
         if (abs(floodX-currentX) + abs(floodY-currentY) < 0.15) {
@@ -514,20 +515,19 @@ void MainWindow::zad4() {
             cout << "end" << endl;
 
         } else {
-            int locMin = space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)];
             double forX = 0;
             double forY = 0;
             double midPointX;
             double midPointY;
+            int locMin = space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)]; // current = robot
             for (int col=0; col < size*2-1; col++) {
                 for (int row=0; row < size*2-1; row++) {
                     midPointX = (double) 6*row/size - 6 + (double) 6/size/2;
-                    midPointY = (double) 6*col/size - 6 + (double) 6/size/2;
-                    if (space[row][col] < locMin && space[row][col] > 1 && analyzeReach(midPointX, midPointY)) {
+                    midPointY = (double) 6*col/size - 6 + (double) 6/size/2;  // mid of current square
+                    if (space[row][col] < locMin && space[row][col] > 1 && analyzeReach(midPointX, midPointY)) { //reachable and not obstacle and smaller
                         locMin = space[row][col];
                         forX = midPointX;
                         forY = midPointY;
-                        //cout << midPointX << ", " << midPointY << " (" << row << ", " << col << "): " << space[row][col] <<endl;
                     }
                 }
             }
@@ -548,21 +548,17 @@ void MainWindow::on_pushButton_13_clicked()
 {
     floodX = ui->lineEdit_9->text().toDouble();
     floodY = ui->lineEdit_10->text().toDouble();
-
-
-
-    FILE* MyFile = fopen("file.txt", "r");  // red file
+    FILE* mapa = fopen("file.txt", "r");  // red file
     cout<<"otvorene"<<endl;
     for (int col=size*2-1; col>=0; col--) {
         for (int row=0; row < size*2-1; row++) {
-            space[row][col] = getc(MyFile) == '#';
+            space[row][col] = getc(mapa) == '#';
         }
-        getc(MyFile); // Precitat \n
+        getc(mapa); // Precitat \n
     }
-    fclose(MyFile);
+    fclose(mapa);
 
-
-    for (int col=0; col < size*2-1; col++) {  // robot radius
+    for (int col=0; col < size*2-1; col++) {
         for (int row=0; row < size*2-1; row++) {
             if (space[row][col] == 1) {
                 for (int padX = -2; padX <= 2; padX++) {
@@ -580,32 +576,36 @@ void MainWindow::on_pushButton_13_clicked()
     } // adjust map
 
     // oznacenie mapy
-    double x = ui->lineEdit_9->text().toDouble();
-    double y = ui->lineEdit_10->text().toDouble();
+    double x = floodX;
+    double y = floodY;
+    bool flooding = false;
+    int numbering = 3;
+
     space[size+(int)(x*size/6)][size+(int)(y*size/6)] = 2;
-    int mark = 3;
-    while (space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)] == 0) {
-        bool change = false;
+    while (space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)] == 0) { // koniec = robot
+        flooding = false;
         for (int col=0; col < size*2-1; col++) {
             for (int row=0; row < size*2-1; row++) {
-                if (space[row][col] == mark-1) {
+                if (space[row][col] == numbering-1) { //has number ? iterate adj cells : continue;
                     for (int offX = -1; offX <= 1; offX++) {
                         for (int offY = -1; offY <= 1; offY++) {
-                            if (space[row+offX][col+offY] == 0) {
-                                space[row+offX][col+offY] = mark;
-                                change = true;
+                            if (space[row+offX][col+offY] == 0) { // empty ? add number : continue;
+                                space[row+offX][col+offY] = numbering;
+                                flooding = true;
                             }
                         }
                     }
                 }
             }
         }
-        if (!change) {
-            cout << "Target is not reachable" <<endl;
+        // UNREACHABLE
+        if (!flooding) {
+            cout << "UNREACHABLE" <<endl;
             break;
         }
-
-        mark++;
+        //REACHABLE
+        else
+            numbering++;
     }
 
     // vypis do konzole pre kontrolu
