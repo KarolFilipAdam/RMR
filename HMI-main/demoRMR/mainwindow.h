@@ -55,6 +55,7 @@ public:
     void zadanieDruhe();
     void zad4();
     bool analyzeReach(double targetX, double targetY);
+    std::pair<double,double> edgeFinder();
 
 int processThisCamera(cv::Mat cameraData);
 int processThisSkeleton(skeleton skeledata);

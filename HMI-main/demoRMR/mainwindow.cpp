@@ -449,15 +449,72 @@ void MainWindow::on_pushButton_12_clicked()
     autoMove = true;
 
 }
+
 bool edgeFlag = false;
 bool wallFlag = false;
+double bestDistance = 0;
+
+std::pair<double,double> MainWindow::edgeFinder(){
+
+    //if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist>35))
+    double previousX= 0;
+    double previousY= 0;
+    bool skokX;
+    bool skokY;
+    double newEdge = 1;
+    double localBestX = 1000000;
+    double localBestY = 1000000;
+
+    for(int k=0;k<copyOfLaserData.numberOfScans/*360*/;k++)
+    {
+        int dist=copyOfLaserData.Data[k].scanDistance/20;
+        double uhol = 360.0-copyOfLaserData.Data[k].scanAngle;
+
+        if(((uhol < 45 ) || (uhol >315 )))
+        {
+
+            double x = currentX + dist*20*cos(fi+(double)(uhol)/180*PI)/1000;
+            double y = currentY + dist*20*sin(fi+(double)(uhol)/180*PI)/1000;
+
+            if(abs(x - previousX) > 30)
+            {
+               newEdge = previousX;
+               if(newEdge < localBestX)
+                {
+                    localBestX = previousX;
+                    localBestY = previousY;
+                }
+            }
+            if(abs(y - previousY) > 50)
+            {
+               newEdge = previousY;
+               if(newEdge < localBestY)
+                {
+                    localBestY = previousY;
+                    localBestX = previousX;
+                }
+
+            }
+
+            previousX = x;
+            previousY = y;
+
+        }
+
+    }
+    pair<double,double> bestEdge;
+    bestEdge.first = localBestX;
+    bestEdge.second = localBestY;
+
+    return bestEdge;
+
+}
 void MainWindow::zadanieDruhe(){
 
     for(int k=0;k<copyOfLaserData.numberOfScans/*360*/;k++)
     {
-        //cout<<"dist"<<copyOfLaserData.Data[k].scanDistance<<endl;
-        int dist=copyOfLaserData.Data[k].scanDistance/20; ///vzdialenost nahodne predelena 20 aby to nejako vyzeralo v okne.. zmen podla uvazenia
-        double uhol = 360.0-copyOfLaserData.Data[k].scanAngle;  // aky uhol zvierame
+        int dist=copyOfLaserData.Data[k].scanDistance/20;
+        double uhol = 360.0-copyOfLaserData.Data[k].scanAngle;
 
 
 
@@ -468,6 +525,8 @@ void MainWindow::zadanieDruhe(){
                 autoMove = false;
                 distanceFromGoal = error;
                 deerFlag = true;
+
+
             }
             else continue;
 
@@ -475,36 +534,39 @@ void MainWindow::zadanieDruhe(){
 
         else{
 
-            if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist>35)){
 
-                edgeAngle = uhol; // našiel som edge
+                pair<double,double> shortestDistances = edgeFinder();
+                if(shortestDistances.first == 1000000)
+                    deerFlag = false;
 
-
-                double x = currentX + dist*20*cos(fi+(double)(uhol)/180*PI)/1000;
-                double y = currentY + dist*20*sin(fi+(double)(uhol)/180*PI)/1000;
-
-                double  checkDistance = (abs(x) + abs(y));
-                cout<<checkDistance<<" "<<error<<" here"<<endl;
-                cout<<"x "<<x<<"y "<<y<<" "<<endl;
-
-                if(checkDistance < error){
-                    cout<<"mensi uhol"<<endl;
-                    edgeFlag = true;
-                    wallFlag = false;
-                    cordX = x;
-                    cordY = y;
-                    autoMove = true;
-                }
                 else{
 
-                    wallFlag = true;
+
+
+                    // Did SD return anything ? Yes We continue with deer found
+                    // No ? We remove deer derrFlag = false;
+
+                    edgeAngle = uhol; // našiel som edge
+
+
+                    double x = currentX + dist*20*cos(fi+(double)(uhol)/180*PI)/1000;
+                    double y = currentY + dist*20*sin(fi+(double)(uhol)/180*PI)/1000;
+
+                    double  checkDistance = (abs(x) + abs(y));
+                    cout<<checkDistance<<" "<<error<<" here"<<endl;
+                    cout<<"x "<<x<<"y "<<y<<" "<<endl;
+
+                    if(checkDistance < error){
+                        cout<<"mensi uhol"<<endl;
+                        edgeFlag = true;
+                        wallFlag = false;
+                        cordX = x;
+                        cordY = y;
+                        autoMove = true;
+                    }
+
+
                 }
-            }
-
-            else
-                edgeFlag = false;
-
-            }
 
     }
 
@@ -518,167 +580,5 @@ void MainWindow::zadanieDruhe(){
 
 
 
-}
-
-
-
-
-bool MainWindow::analyzeReach(double targetX, double targetY) {  // can I reach these ?
-    double xDiff = targetX - currentX;
-    double yDiff = targetY - currentY;
-    double desiredAngle = atan2(yDiff, xDiff);
-    double distance = sqrt(xDiff*xDiff + yDiff*yDiff)*1000;
-    for (int i=0; i<copyOfLaserData.numberOfScans; i++) {
-        if (copyOfLaserData.Data[i].scanDistance < 150) continue; // 150 mm invladi
-        double angle = -(2*PI-((double)copyOfLaserData.Data[i].scanAngle/180*PI))+desiredAngle-fi;
-        while (angle < -PI) angle += 2*PI;
-        while (angle > PI) angle -= 2*PI;  // make sure  -p p
-        if (abs(angle) > 0.5*PI) continue; // only chceck front
-        double treshold = 600; // treshold pod týmto ne
-        if (angle < 0.01 && copyOfLaserData.Data[i].scanDistance < distance) return false;
-        if (copyOfLaserData.Data[i].scanDistance < distance && copyOfLaserData.Data[i].scanDistance < (double) treshold / (2*abs(sin(angle)))) {
-            return false;
-
-        }
-    }
-    return true;
-}
-
-
-
-
-#define size 60
-int space[size*2][size*2];
-bool flagZ4 = false;
-double floodX = 0;
-double floodY = 0;
-
-
-
-void MainWindow::zad4() {
-    if (!flagZ4) return;
-    static double prevFi = fi;
-    if (abs(prevFi-fi) > 0.001) {
-        prevFi = fi;
-        return;
-    }
-    prevFi = fi;
-
-    if (!autoMove) {
-
-        if (abs(floodX-currentX) + abs(floodY-currentY) < 0.15) {
-            flagZ4 = false;
-            cout << "end" << endl;
-
-        } else {
-            int locMin = space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)];
-            double forX = 0;
-            double forY = 0;
-            double midPointX;
-            double midPointY;
-            for (int col=0; col < size*2-1; col++) {
-                for (int row=0; row < size*2-1; row++) {
-                    midPointX = (double) 6*row/size - 6 + (double) 6/size/2;
-                    midPointY = (double) 6*col/size - 6 + (double) 6/size/2;
-                    if (space[row][col] < locMin && space[row][col] > 1 && analyzeReach(midPointX, midPointY)) {
-                        locMin = space[row][col];
-                        forX = midPointX;
-                        forY = midPointY;
-                        //cout << midPointX << ", " << midPointY << " (" << row << ", " << col << "): " << space[row][col] <<endl;
-                    }
-                }
-            }
-            if (locMin == 2) {  // start
-                cordX = floodX;
-                cordY = floodY;
-            } else {
-                cordX = forX;
-                cordY = forY;
-            }
-            cout << "new position: " << cordX << ", " << cordY <<endl;
-            autoMove = true;
-        }
-    }
-}
-
-void MainWindow::on_pushButton_13_clicked()
-{
-    floodX = ui->lineEdit_9->text().toDouble();
-    floodY = ui->lineEdit_10->text().toDouble();
-
-
-
-    FILE* MyFile = fopen("file.txt", "r");  // red file
-    cout<<"otvorene"<<endl;
-    for (int col=size*2-1; col>=0; col--) {
-        for (int row=0; row < size*2-1; row++) {
-            space[row][col] = getc(MyFile) == '#';
-        }
-        getc(MyFile); // Precitat \n
-    }
-    fclose(MyFile);
-
-
-    for (int col=0; col < size*2-1; col++) {  // robot radius
-        for (int row=0; row < size*2-1; row++) {
-            if (space[row][col] == 1) {
-                for (int padX = -2; padX <= 2; padX++) {
-                    for (int padY = -2; padY <= 2; padY++) {
-                        if (space[row+padX][col+padY] == 0) space[row+padX][col+padY] = 2;
-                    } // 5x5 padding filter
-                }
-            }
-        }
-    }
-    for (int col=0; col < size*2-1; col++) {
-        for (int row=0; row < size*2-1; row++) {
-            if (space[row][col] == 2) space[row][col] = 1;
-        }
-    } // adjust map
-
-    // oznacenie mapy
-    double x = ui->lineEdit_9->text().toDouble();
-    double y = ui->lineEdit_10->text().toDouble();
-    space[size+(int)(x*size/6)][size+(int)(y*size/6)] = 2;
-    int mark = 3;
-    while (space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)] == 0) {
-        bool change = false;
-        for (int col=0; col < size*2-1; col++) {
-            for (int row=0; row < size*2-1; row++) {
-                if (space[row][col] == mark-1) {
-                    for (int offX = -1; offX <= 1; offX++) {
-                        for (int offY = -1; offY <= 1; offY++) {
-                            if (space[row+offX][col+offY] == 0) {
-                                space[row+offX][col+offY] = mark;
-                                change = true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (!change) {
-            cout << "Target is not reachable" <<endl;
-            break;
-        }
-
-        mark++;
-    }
-
-    // vypis do konzole pre kontrolu
-    for (int col=size*2-1; col>=0; col--) {
-        for (int row=size-5; row < size*2-1; row++) {
-            if (space[row][col] < 2) {
-                cout << " ";
-                cout << (space[row][col] ? '#' : ' ');
-            } else {
-                if (space[row][col] < 10) cout << " ";
-                cout << space[row][col];
-            }
-        }
-        cout <<endl;
-    }
-    autoMove = true;
-    flagZ4 = true;
 }
 
