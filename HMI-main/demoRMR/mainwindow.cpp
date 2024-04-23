@@ -10,6 +10,9 @@
 /// AZ POTOM ZACNI ROBIT... AK TO NESPRAVIS, POJDU BODY DOLE... A NIE JEDEN,ALEBO DVA ALE BUDES RAD
 /// AK SA DOSTANES NA SKUSKU
 
+void loadMap();
+void padding();
+void flood();
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -38,6 +41,8 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+
 bool deerFlag = false;
 bool autoMove = false;
 void MainWindow::paintEvent(QPaintEvent *event)
@@ -543,13 +548,20 @@ void MainWindow::zad4() {
         }
     }
 }
-
+FILE* mapa;
 void MainWindow::on_pushButton_13_clicked()
 {
+
     floodX = ui->lineEdit_9->text().toDouble();
     floodY = ui->lineEdit_10->text().toDouble();
-    FILE* mapa = fopen("file.txt", "r");  // red file
-    cout<<"otvorene"<<endl;
+    loadMap();
+    padding();
+    flood();
+
+}
+
+void loadMap(){
+    mapa = fopen("file.txt", "r");
     for (int col=size*2-1; col>=0; col--) {
         for (int row=0; row < size*2-1; row++) {
             space[row][col] = getc(mapa) == '#';
@@ -557,6 +569,10 @@ void MainWindow::on_pushButton_13_clicked()
         getc(mapa); // Precitat \n
     }
     fclose(mapa);
+
+}
+
+void padding(){
 
     for (int col=0; col < size*2-1; col++) {
         for (int row=0; row < size*2-1; row++) {
@@ -569,13 +585,16 @@ void MainWindow::on_pushButton_13_clicked()
             }
         }
     }
+
     for (int col=0; col < size*2-1; col++) {
         for (int row=0; row < size*2-1; row++) {
             if (space[row][col] == 2) space[row][col] = 1;
         }
-    } // adjust map
+    }
+}
 
-    // oznacenie mapy
+
+void flood(){
     double x = floodX;
     double y = floodY;
     bool flooding = false;
@@ -607,21 +626,10 @@ void MainWindow::on_pushButton_13_clicked()
         else
             numbering++;
     }
-
-    // vypis do konzole pre kontrolu
-    for (int col=size*2-1; col>=0; col--) {
-        for (int row=size-5; row < size*2-1; row++) {
-            if (space[row][col] < 2) {
-                cout << " ";
-                cout << (space[row][col] ? '#' : ' ');
-            } else {
-                if (space[row][col] < 10) cout << " ";
-                cout << space[row][col];
-            }
-        }
-        cout <<endl;
-    }
     autoMove = true;
     flagZ4 = true;
-}
+ }
+
+
+
 
