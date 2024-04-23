@@ -474,11 +474,11 @@ void MainWindow::zadanieDruhe(double uhol, int dist){
 bool MainWindow::analyzeReach(double targetX, double targetY) {  // can I reach these ?
     double xDiff = targetX - currentX;
     double yDiff = targetY - currentY;
-    double desiredAngle = atan2(yDiff, xDiff);
     double distance = sqrt(xDiff*xDiff + yDiff*yDiff)*1000;
+    double wantThisAngle = atan2(yDiff, xDiff);
     for (int i=0; i<copyOfLaserData.numberOfScans; i++) {
         if (copyOfLaserData.Data[i].scanDistance < 150) continue; // 150 mm invladi
-        double angle = -(2*PI-((double)copyOfLaserData.Data[i].scanAngle/180*PI))+desiredAngle-fi;
+        double angle = -(2*PI-((double)copyOfLaserData.Data[i].scanAngle/180*PI))+wantThisAngle-fi;
         while (angle < -PI) angle += 2*PI;
         while (angle > PI) angle -= 2*PI;  // make sure  -p p
         if (abs(angle) > 0.5*PI) continue; // only chceck front
@@ -561,6 +561,7 @@ void MainWindow::on_pushButton_13_clicked()
 }
 
 void loadMap(){
+
     mapa = fopen("file.txt", "r");
     for (int col=size*2-1; col>=0; col--) {
         for (int row=0; row < size*2-1; row++) {
@@ -595,6 +596,8 @@ void padding(){
 
 
 void flood(){
+
+
     double x = floodX;
     double y = floodY;
     bool flooding = false;
@@ -619,8 +622,7 @@ void flood(){
         }
         // UNREACHABLE
         if (!flooding) {
-            cout << "UNREACHABLE" <<endl;
-            break;
+            return;
         }
         //REACHABLE
         else
