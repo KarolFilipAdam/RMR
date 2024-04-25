@@ -161,7 +161,7 @@ int MainWindow::processThisLidar(LaserMeasurement laserData)
 
     Zadanie3();
     zadanieDruhe();
-    zad4();
+    //zad4();
 
     return 0;
 
@@ -459,12 +459,16 @@ std::pair<double,double> MainWindow::edgeFinder(){
     //if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist>35))
     double previousX= 0;
     double previousY= 0;
+    double previousDist = 9999999;
     bool skokX;
     bool skokY;
     double newEdgeY = 1;
     double newEdgeX = 1;
     double localBestX = 1000000;
     double localBestY = 1000000;
+    double lowEdgeDist = 1;
+    double localLowEdgeDist = 1000000;
+
 
     for(int k=0;k<copyOfLaserData.numberOfScans/*360*/;k++)
     {
@@ -477,20 +481,20 @@ std::pair<double,double> MainWindow::edgeFinder(){
             double x = currentX + dist*20*cos(fi+(double)(uhol)/180*PI)/1000;
             double y = currentY + dist*20*sin(fi+(double)(uhol)/180*PI)/1000;
 
-            if(abs(x - previousX) > 50 || abs(y - previousY) > 50)
+            if(abs(dist - previousDist) > 10 && abs(dist-previousDist) < 9999)
             {
-                newEdgeX = previousX;
-                newEdgeY = previousY;
+                newEdgeX = x;
+                newEdgeY = y;
+                lowEdgeDist = dist;
 
-                if(newEdgeX < localBestX || newEdgeY < localBestY)
+                if(lowEdgeDist < localLowEdgeDist)
                 {
-                    localBestX = previousX;
-                    localBestY = previousY;
+                    localLowEdgeDist = lowEdgeDist;
+                    localBestX = newEdgeX;
+                    localBestY = newEdgeY;
                 }
             }
-
-            previousX = x;
-            previousY = y;
+            previousDist = dist;
 
         }
 
@@ -498,6 +502,7 @@ std::pair<double,double> MainWindow::edgeFinder(){
     pair<double,double> bestEdge;
     bestEdge.first = localBestX;
     bestEdge.second = localBestY;
+    cout<<"localBestX "<<localBestX<<"localBestY "<<localBestY<<" "<<endl;
 
     return bestEdge;
 
@@ -511,7 +516,7 @@ void MainWindow::zadanieDruhe(){
 
 
 
-        if(deerFlag == false){ // No deer
+        if(!deerFlag){ // No deer
 
             if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist<30)){  //prekazka predomnou
                 cout<<"ZASTAV"<<endl;
@@ -557,6 +562,7 @@ void MainWindow::zadanieDruhe(){
                         cordX = x;
                         cordY = y;
                         autoMove = true;
+                        deerFlag = false;
 
 
 
@@ -569,5 +575,11 @@ void MainWindow::zadanieDruhe(){
 
        // cout<<"stena"<<endl;
     }
+}
+
+
+void MainWindow::on_pushButton_13_clicked()
+{
+
 }
 
