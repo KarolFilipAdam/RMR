@@ -620,7 +620,12 @@ void MainWindow::wallFollower(){
         cordY = Yzero;
         autoMove = true; // idem rovno
 
-        //toto je napicu
+        // otoc 90
+        //sleduj ci tam stale je a chod rovno
+        // co ej to rovno ? ez iba translate speed
+        //ak tam neni otoc o devedesiat najdi edge chod k edgu
+
+
         double dotX = cordX - currentX;
         double dotY = cordY - currentY;
         localError = (abs(dotY) + abs(dotX));
