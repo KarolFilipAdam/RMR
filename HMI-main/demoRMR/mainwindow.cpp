@@ -536,6 +536,7 @@ void MainWindow::zadanieDruhe(){
                 pair<double,double> shortestDistances = edgeFinder();
                 if(shortestDistances.first == 1000000)
                     deerFlag = false;
+                    wallFlag = true;
 
                 else{
 
@@ -577,7 +578,13 @@ void MainWindow::zadanieDruhe(){
     }
 }
 
-
+void MainWindow::wallFollower(){
+    //otoc sa o 90
+    // chod rovno
+    //ak predtebou otoc sa 90
+    //chod rovno
+    //ak sa ti zmensil error skonci a najdi edge
+}
 void MainWindow::on_pushButton_13_clicked()
 {
 

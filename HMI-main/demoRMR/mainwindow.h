@@ -56,6 +56,7 @@ public:
     void zad4();
     bool analyzeReach(double targetX, double targetY);
     std::pair<double,double> edgeFinder();
+    void wallFollower();
 
 int processThisCamera(cv::Mat cameraData);
 int processThisSkeleton(skeleton skeledata);
