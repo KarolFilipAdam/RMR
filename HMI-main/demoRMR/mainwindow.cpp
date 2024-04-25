@@ -461,7 +461,8 @@ std::pair<double,double> MainWindow::edgeFinder(){
     double previousY= 0;
     bool skokX;
     bool skokY;
-    double newEdge = 1;
+    double newEdgeY = 1;
+    double newEdgeX = 1;
     double localBestX = 1000000;
     double localBestY = 1000000;
 
@@ -476,24 +477,16 @@ std::pair<double,double> MainWindow::edgeFinder(){
             double x = currentX + dist*20*cos(fi+(double)(uhol)/180*PI)/1000;
             double y = currentY + dist*20*sin(fi+(double)(uhol)/180*PI)/1000;
 
-            if(abs(x - previousX) > 30)
+            if(abs(x - previousX) > 50 || abs(y - previousY) > 50)
             {
-               newEdge = previousX;
-               if(newEdge < localBestX)
-                {
-                    localBestX = previousX;
-                    localBestY = previousY;
-                }
-            }
-            if(abs(y - previousY) > 50)
-            {
-               newEdge = previousY;
-               if(newEdge < localBestY)
-                {
-                    localBestY = previousY;
-                    localBestX = previousX;
-                }
+                newEdgeX = previousX;
+                newEdgeY = previousY;
 
+                if(newEdgeX < localBestX || newEdgeY < localBestY)
+                {
+                    localBestX = previousX;
+                    localBestY = previousY;
+                }
             }
 
             previousX = x;
@@ -549,24 +542,26 @@ void MainWindow::zadanieDruhe(){
                     edgeAngle = uhol; // našiel som edge
 
 
-                    double x = currentX + dist*20*cos(fi+(double)(uhol)/180*PI)/1000;
-                    double y = currentY + dist*20*sin(fi+(double)(uhol)/180*PI)/1000;
+                    //double x = currentX + dist*20*cos(fi+(double)(uhol)/180*PI)/1000;
+                    //double y = currentY + dist*20*sin(fi+(double)(uhol)/180*PI)/1000;
 
-                    double  checkDistance = (abs(x) + abs(y));
-                    cout<<checkDistance<<" "<<error<<" here"<<endl;
+                    std:pair<double,double> edgeCord = edgeFinder();
+
+                        double x = edgeCord.first;
+                        double y = edgeCord.second;
+
                     cout<<"x "<<x<<"y "<<y<<" "<<endl;
 
-                    if(checkDistance < error){
-                        cout<<"mensi uhol"<<endl;
                         edgeFlag = true;
                         wallFlag = false;
                         cordX = x;
                         cordY = y;
                         autoMove = true;
-                    }
+
 
 
                 }
+            }
 
     }
 
@@ -574,11 +569,5 @@ void MainWindow::zadanieDruhe(){
 
        // cout<<"stena"<<endl;
     }
-
-
-
-
-
-
 }
 
