@@ -270,9 +270,7 @@ void MainWindow::on_pushButton_clicked()
         ui->pushButton->setText("use laser");
     }
 }
-double secCordX;
-double secCordY;
-bool secAutoMove;
+
 
 double edgeAngle;
 void MainWindow::getNewFrame()
@@ -295,6 +293,11 @@ double ramVal = 10;
 double rampa = ramVal;
 double rotacia = 0;
 
+bool edgeFlag = false;
+bool wallFlag = false;
+double bestDistance = 0;
+double cord2X;
+double cord2Y;
 void MainWindow::zadaniePrve(TKobukiData robotdata){
 
     static unsigned short latestR = robotdata.EncoderRight;
@@ -361,6 +364,12 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
         else{ //došiel
             robot.setTranslationSpeed(0);
             autoMove = false;
+            if(edgeFlag){
+                edgeFlag = false;
+                deerFlag = false;
+                cordX = cord2X;
+                cordY = cord2Y;
+            }
         }
 //////////////////////////////////////////////////// U2
 
@@ -410,6 +419,7 @@ void MainWindow::Zadanie3(){
     }
 
 
+
     for (int i=0; i<copyOfLaserData.numberOfScans; i++) {
 
         if ((copyOfLaserData.Data[i].scanDistance < 160 ) || (copyOfLaserData.Data[i].scanDistance > 2000) ) continue;
@@ -446,13 +456,13 @@ void MainWindow::on_pushButton_12_clicked()
 {
     cordX = ui->lineEdit_7->text().toDouble();
     cordY = ui->lineEdit_8->text().toDouble();
+    cord2X = cordX;
+    cord2Y = cordY;
     autoMove = true;
 
 }
 
-bool edgeFlag = false;
-bool wallFlag = false;
-double bestDistance = 0;
+
 
 std::pair<double,double> MainWindow::edgeFinder(){
 
@@ -507,6 +517,8 @@ std::pair<double,double> MainWindow::edgeFinder(){
     return bestEdge;
 
 }
+double pastError;
+double localError = 9999999;
 void MainWindow::zadanieDruhe(){
 
     for(int k=0;k<copyOfLaserData.numberOfScans/*360*/;k++)
@@ -530,60 +542,93 @@ void MainWindow::zadanieDruhe(){
 
         }
 
-        else{
+        else
+        { // determinoval som ze je predomnou prekazka
 
+            if(wallFlag){
 
-                pair<double,double> shortestDistances = edgeFinder();
-                if(shortestDistances.first == 1000000)
-                    deerFlag = false;
+                wallFollower();   // ideme na stenu
+            }
+            else{
+
+                pair<double,double> shortestDistances = edgeFinder(); // hladam najlblizsi edge
+
+                if(shortestDistances.first == 1000000){ // nenasiel som idem na stenu
+                    // deerFlag = false;
+                    localError = 9999999;
                     wallFlag = true;
+                    edgeFlag = false;
+                }
 
-                else{
+                else{ // nasiel som idem k edgu
 
-
-
-                    // Did SD return anything ? Yes We continue with deer found
-                    // No ? We remove deer derrFlag = false;
-
-                    edgeAngle = uhol; // našiel som edge
-
-
-                    //double x = currentX + dist*20*cos(fi+(double)(uhol)/180*PI)/1000;
-                    //double y = currentY + dist*20*sin(fi+(double)(uhol)/180*PI)/1000;
-
-                    std:pair<double,double> edgeCord = edgeFinder();
-
-                        double x = edgeCord.first;
-                        double y = edgeCord.second;
+                    double x = shortestDistances.first;
+                    double y = shortestDistances.second;
 
                     cout<<"x "<<x<<"y "<<y<<" "<<endl;
 
-                        edgeFlag = true;
-                        wallFlag = false;
-                        cordX = x;
-                        cordY = y;
-                        autoMove = true;
-                        deerFlag = false;
+                    edgeFlag = true;
+                    wallFlag = false;
+                    cordX = x;
+                    cordY = y;
+                    autoMove = true;
+                    deerFlag = false;  // uz nemam prekazku pred sebou lebo mam edge
+
+                    // dojde na edge a znova determinuje
 
 
 
                 }
             }
 
+
+
+
+        }
+
+
     }
 
-    if(!edgeFlag && deerFlag){
 
-       // cout<<"stena"<<endl;
-    }
 }
 
+float ro = 0.5;
+
+
 void MainWindow::wallFollower(){
-    //otoc sa o 90
-    // chod rovno
-    //ak predtebou otoc sa 90
-    //chod rovno
-    //ak sa ti zmensil error skonci a najdi edge
+    double Xzero = currentX - ro;
+    double Yzero = currentY - ro;
+    cout<<"stena"<<endl;
+    if(localError < distanceFromGoal){
+        wallFlag = false;
+        deerFlag = false;
+        cordX = cord2X;
+        cordY = cord2Y;
+        return;
+    }
+        if(abs(fi) > 45 && abs(fi) < 120){ //hor
+            double Xzero = currentX + ro;
+            double Yzero = currentY;
+        }
+        if( abs(fi) < 45 && abs(fi) > 120 ){ //ver val
+            double Xzero = currentX;
+            double Yzero = currentY + ro;
+        }
+
+
+        cordX = Xzero;
+        cordY = Yzero;
+        autoMove = true; // idem rovno
+
+        //toto je napicu
+        double dotX = cordX - currentX;
+        double dotY = cordY - currentY;
+        localError = (abs(dotY) + abs(dotX));
+
+
+
+
+
 }
 void MainWindow::on_pushButton_13_clicked()
 {
