@@ -160,8 +160,9 @@ int MainWindow::processThisLidar(LaserMeasurement laserData)
     update();//tento prikaz prinuti prekreslit obrazovku.. zavola sa paintEvent funkcia
 
     Zadanie3();
-    zadanieDruhe();
-    //zad4();
+    //zadanieDruhe();
+    //zad4()
+    wallFollower();
 
     return 0;
 
@@ -547,7 +548,6 @@ void MainWindow::zadanieDruhe(){
 
             if(wallFlag){
 
-                wallFollower();   // ideme na stenu
             }
             else{
 
@@ -596,41 +596,36 @@ float ro = 0.5;
 
 
 void MainWindow::wallFollower(){
-    double Xzero = currentX - ro;
-    double Yzero = currentY - ro;
-    cout<<"stena"<<endl;
-    if(localError < distanceFromGoal){
-        wallFlag = false;
-        deerFlag = false;
-        cordX = cord2X;
-        cordY = cord2Y;
-        return;
+    for(int k=0;k<copyOfLaserData.numberOfScans/*360*/;k++)
+    {
+        int dist=copyOfLaserData.Data[k].scanDistance/20;
+        double uhol = 360.0-copyOfLaserData.Data[k].scanAngle;
+
+        if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist<30) && !deerFlag){  //prekazka predomnou
+                cout<<"ZASTAV"<<endl;
+                autoMove = false;
+                cout<<"cX "<<currentX<<"cY "<<currentY<<endl;
+                double x = currentX + dist*20*cos(fi+(double)(90)/180*PI)/1000;
+                double y = currentY + dist*20*sin(fi+(double)(90)/180*PI)/1000;
+                cout<<"cX "<<x<<"cY "<<y<<endl;
+                cordX = x;
+                cordY = y;
+                autoMove = true;
+                wallFlag = true;
+                deerFlag = true;
+            }
+
+            if(wallFlag){
+                if((230 < uhol && 305 > uhol) && dist <32){  // mame stenu
+                    cordX = currentY + dist*20*sin(fi+(double)(0)/180*PI)/1000;
+                    cordY = currentX + dist*20*cos(fi+(double)(0)/180*PI)/1000;
+
+                }
+
+
     }
-        if(abs(fi) > 45 && abs(fi) < 120){ //hor
-            double Xzero = currentX + ro;
-            double Yzero = currentY;
-        }
-        if( abs(fi) < 45 && abs(fi) > 120 ){ //ver val
-            double Xzero = currentX;
-            double Yzero = currentY + ro;
-        }
 
-
-        cordX = Xzero;
-        cordY = Yzero;
-        autoMove = true; // idem rovno
-
-        // otoc 90
-        //sleduj ci tam stale je a chod rovno
-        // co ej to rovno ? ez iba translate speed
-        //ak tam neni otoc o devedesiat najdi edge chod k edgu
-
-
-        double dotX = cordX - currentX;
-        double dotY = cordY - currentY;
-        localError = (abs(dotY) + abs(dotX));
-
-
+    }
 
 
 
