@@ -58,6 +58,7 @@ public:
     std::pair<double,double> edgeFinder();
     void wallFollower();
 
+
 int processThisCamera(cv::Mat cameraData);
 int processThisSkeleton(skeleton skeledata);
 

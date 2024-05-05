@@ -40,7 +40,7 @@ MainWindow::~MainWindow()
 }
 bool deerFlag = false;
 bool autoMove = false;
-bool distanceFromGoal;
+double distanceFromGoal;
 double error;
 void MainWindow::paintEvent(QPaintEvent *event)
 {
@@ -160,9 +160,8 @@ int MainWindow::processThisLidar(LaserMeasurement laserData)
     update();//tento prikaz prinuti prekreslit obrazovku.. zavola sa paintEvent funkcia
 
     Zadanie3();
-    //zadanieDruhe();
+    zadanieDruhe();
     //zad4()
-    wallFollower();
 
     return 0;
 
@@ -281,7 +280,7 @@ void MainWindow::getNewFrame()
 
 double cordX = 0;
 double cordY = 0;
-double fi = 0;
+double fi = 0.001;
 double currentX = 0;
 double currentY = 0;
 long double tickToMeter = 0.000085292090497737556558; // [m/tick]
@@ -299,6 +298,7 @@ bool wallFlag = false;
 double bestDistance = 0;
 double cord2X;
 double cord2Y;
+double maxSPeed = 200;
 void MainWindow::zadaniePrve(TKobukiData robotdata){
 
     static unsigned short latestR = robotdata.EncoderRight;
@@ -324,11 +324,13 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
     double xDot = cordX - currentX;
     double yDot = cordY - currentY;
 
+
     if(autoMove){
 
         error = (abs(yDot) + abs(xDot));
         double theAngle = atan2(yDot,xDot);
         rotacia = theAngle - fi;
+
 
         if (rotacia > PI) rotacia = -2*PI+rotacia;
         if (rotacia < -PI) rotacia = 2*PI+rotacia;
@@ -338,13 +340,13 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
         double rychlost = zasah;
 
 
-        if(rotacia > 1.5)
-            rotacia = 1.5;
-        if(rotacia < -1.5)
-            rotacia = -1.5;
-        if(rychlost > 600)
+        if(rotacia > 2)
+            rotacia = 2;
+        if(rotacia < -2)
+            rotacia = -2;
+        if(rychlost > maxSPeed)
         {
-            rychlost = 600;
+            rychlost = maxSPeed;
         }
         if(rychlost-rampa > ramVal){
             rychlost = rampa+ramVal;
@@ -365,12 +367,16 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
         else{ //došiel
             robot.setTranslationSpeed(0);
             autoMove = false;
+           // cout<<"došiel"<<endl;
+
             if(edgeFlag){
                 edgeFlag = false;
                 deerFlag = false;
                 cordX = cord2X;
                 cordY = cord2Y;
+                autoMove = true;
             }
+
         }
 //////////////////////////////////////////////////// U2
 
@@ -463,7 +469,27 @@ void MainWindow::on_pushButton_12_clicked()
 
 }
 
+bool MainWindow::analyzeReach(double targetX, double targetY) {  // can I reach these ?
+    double xDiff = targetX - currentX;
+    double yDiff = targetY - currentY;
+    double distance = sqrt(xDiff*xDiff + yDiff*yDiff)*1000;
+    double wantThisAngle = atan2(yDiff, xDiff);
 
+    for (int i=0; i<copyOfLaserData.numberOfScans; i++) {
+        if (copyOfLaserData.Data[i].scanDistance < 150) continue; // 150 mm invladi
+        double angle = -(2*PI-((double)copyOfLaserData.Data[i].scanAngle/180*PI))+wantThisAngle-fi;
+        while (angle < -PI) angle += 2*PI;
+        while (angle > PI) angle -= 2*PI;  // make sure  -p p
+        if (abs(angle) > 0.5*PI) continue; // only chceck front
+        double treshold = 600; // treshold pod týmto ne
+        if (angle < 0.01 && copyOfLaserData.Data[i].scanDistance < distance) return false;
+        if (copyOfLaserData.Data[i].scanDistance < distance && copyOfLaserData.Data[i].scanDistance < (double) treshold / (2*abs(sin(angle)))) {
+            return false;
+
+        }
+    }
+    return true;
+}
 
 std::pair<double,double> MainWindow::edgeFinder(){
 
@@ -521,21 +547,33 @@ std::pair<double,double> MainWindow::edgeFinder(){
 double pastError;
 double localError = 9999999;
 void MainWindow::zadanieDruhe(){
-
+    double clsD = 10000;
     for(int k=0;k<copyOfLaserData.numberOfScans/*360*/;k++)
     {
         int dist=copyOfLaserData.Data[k].scanDistance/20;
         double uhol = 360.0-copyOfLaserData.Data[k].scanAngle;
 
+        if(dist > 6 && dist < clsD){
+            clsD = dist;
+        }
 
 
         if(!deerFlag){ // No deer
 
-            if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist<30)){  //prekazka predomnou
-                cout<<"ZASTAV"<<endl;
+            bool reachable = analyzeReach(cord2X,cord2Y);
+
+
+            if(  ( ((uhol < 35 ) || (uhol >325 )) && ((dist > 5) && (dist<21)) ) && !reachable ){  //prekazka predomnou
                 autoMove = false;
-                distanceFromGoal = error;
+                maxSPeed = 80;
+
+                cout<<"distanceFromGoal "<<distanceFromGoal<<endl;
                 deerFlag = true;
+                //wallFlag = true;
+
+                //cordX = (currentX + 1*cos(fi + 1.50));
+                //cordY = (currentY + 1*sin(fi + 1.50));
+                //autoMove = true;
 
 
             }
@@ -546,43 +584,6 @@ void MainWindow::zadanieDruhe(){
         else
         { // determinoval som ze je predomnou prekazka
 
-            if(wallFlag){
-
-            }
-            else{
-
-                pair<double,double> shortestDistances = edgeFinder(); // hladam najlblizsi edge
-
-                if(shortestDistances.first == 1000000){ // nenasiel som idem na stenu
-                    // deerFlag = false;
-                    localError = 9999999;
-                    wallFlag = true;
-                    edgeFlag = false;
-                }
-
-                else{ // nasiel som idem k edgu
-
-                    double x = shortestDistances.first;
-                    double y = shortestDistances.second;
-
-                    cout<<"x "<<x<<"y "<<y<<" "<<endl;
-
-                    edgeFlag = true;
-                    wallFlag = false;
-                    cordX = x;
-                    cordY = y;
-                    autoMove = true;
-                    deerFlag = false;  // uz nemam prekazku pred sebou lebo mam edge
-
-                    // dojde na edge a znova determinuje
-
-
-
-                }
-            }
-
-
-
 
         }
 
@@ -590,42 +591,155 @@ void MainWindow::zadanieDruhe(){
     }
 
 
+    if(deerFlag){
+
+        if(wallFlag){
+            wallFollower();
+        }
+
+        else{
+
+            pair<double,double> shortestDistances = edgeFinder(); // hladam najlblizsi edge
+
+            if(shortestDistances.first != 1000000 && clsD > 17 && !wallFlag){ // found edge and its not too close
+
+                double x = shortestDistances.first;
+                double y = shortestDistances.second;
+
+                cout<<"x "<<x<<"y "<<y<<" "<<endl;
+                cout<<"MAM EDGE"<<endl;
+
+                edgeFlag = true;
+                wallFlag = false;
+                cordX = x;
+                cordY = y;
+                autoMove = true;
+                deerFlag = false;
+
+
+            }
+
+            else{ // no edge or too close
+                //deerFlag = false;
+                localError = 9999999;
+                wallFlag = true;
+
+                edgeFlag = false;
+                cout<<"IDEM STENA"<<endl;
+                double xDot = cord2X - currentX;
+                double yDot = cord2Y - currentY;
+                distanceFromGoal = (abs(yDot) + abs(xDot));
+                // dojde na edge a znova determinuje
+
+
+
+            }
+        }
+    }
+
+
+
+
+
 }
 
 float ro = 0.5;
 
-
+float turnDist = 35;
+float localDist = 100000;
+float localAngle = 0;
+bool rohFlag = false;
 void MainWindow::wallFollower(){
+    //cout<<"wall flaggin"<<endl;
+    int dex1 = 0;
+    int dex2 = 0;
+    int dex3 = 0;
     for(int k=0;k<copyOfLaserData.numberOfScans/*360*/;k++)
     {
         int dist=copyOfLaserData.Data[k].scanDistance/20;
         double uhol = 360.0-copyOfLaserData.Data[k].scanAngle;
 
-        if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist<30) && !deerFlag){  //prekazka predomnou
-                cout<<"ZASTAV"<<endl;
-                autoMove = false;
-                cout<<"cX "<<currentX<<"cY "<<currentY<<endl;
-                double x = currentX + dist*20*cos(fi+(double)(90)/180*PI)/1000;
-                double y = currentY + dist*20*sin(fi+(double)(90)/180*PI)/1000;
-                cout<<"cX "<<x<<"cY "<<y<<endl;
-                cordX = x;
-                cordY = y;
-                autoMove = true;
-                wallFlag = true;
-                deerFlag = true;
-            }
 
-            if(wallFlag){
-                if((230 < uhol && 305 > uhol) && dist <32){  // mame stenu
-                    cordX = currentY + dist*20*sin(fi+(double)(0)/180*PI)/1000;
-                    cordY = currentX + dist*20*cos(fi+(double)(0)/180*PI)/1000;
+        if(dist > 6 && dist < localDist){
+            localDist = dist;
+            localAngle = uhol;
+            dex3 = dex2;
+            dex2 = dex1;
+            dex1 = k;
 
-                }
-
+        }
 
     }
 
+    double xDot = cord2X - currentX;
+    double yDot = cord2Y - currentY;
+    bool reachable = analyzeReach(cord2X,cord2Y);
+    double goalError = (abs(yDot) + abs(xDot));
+    //cout<<"goalError "<<goalError<<endl;
+    //cout<<"distanceFromGoal "<<distanceFromGoal<<endl;
+
+    if(goalError >= distanceFromGoal-0.2){
+        rohFlag = false;
+        autoMove = false;
+        if(((localAngle > 280) || localAngle == 0)){
+            cordX = (currentX + 0.1*cos(fi+0.3));
+            cordY = (currentY + 0.1*sin(fi+0.3));
+
+
+        }
+        else if ((localAngle < 269)){
+            cordX = (currentX + 0.5*cos(fi-1.1));
+            cordY = (currentY + 0.5*sin(fi-1.1));
+
+        }
+        else{
+            cordX = (currentX + 0.3*cos(fi - 0.001));   // + na lavo
+            cordY = (currentY + 0.3*sin(fi - 0.001));
+
+        }
     }
+
+
+
+    else{
+        cout<<"UZ SOM TAM "<<goalError<<endl;
+        cordX = cord2X;
+        cordY = cord2Y;
+        wallFlag = false;
+        deerFlag = false;
+
+    }
+
+
+
+
+
+    autoMove = true;
+    localDist = 100000;
+    localAngle = 0;
+
+/*
+    else{
+
+        if((localDist < 30) && ((localAngle < 280 ) && (localAngle >260 ))){
+            autoMove = false;
+            cordX = (currentX + 1*cos(fi + 0.5));   // + na lavo
+            cordY = (currentY + 1*sin(fi + 0.5));
+            autoMove = true;
+
+
+        }
+
+        else if((localDist > 40) && ((localAngle < 280 ) && (localAngle >260 ))){
+            autoMove = false;
+            cordX = (currentX + 1*cos(fi - 0.5));   // + na lavo
+            cordY = (currentY + 1*sin(fi - 0.5));
+            autoMove = true;
+
+
+        }
+    }
+*/
 
 
 
