@@ -2,13 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QPainter>
 #include <math.h>
-///TOTO JE DEMO PROGRAM...AK SI HO NASIEL NA PC V LABAKU NEPREPISUJ NIC,ALE SKOPIRUJ SI MA NIEKAM DO INEHO FOLDERA
-/// AK HO MAS Z GITU A ROBIS NA LABAKOVOM PC, TAK SI HO VLOZ DO FOLDERA KTORY JE JASNE ODLISITELNY OD TVOJICH KOLEGOV
-/// NASLEDNE V POLOZKE Projects SKONTROLUJ CI JE VYPNUTY shadow build...
-/// POTOM MIESTO TYCHTO PAR RIADKOV NAPIS SVOJE MENO ALEBO NEJAKY INY LUKRATIVNY IDENTIFIKATOR
-/// KED SA NAJBLIZSIE PUSTIS DO PRACE, SKONTROLUJ CI JE MIESTO TOHTO TEXTU TVOJ IDENTIFIKATOR
-/// AZ POTOM ZACNI ROBIT... AK TO NESPRAVIS, POJDU BODY DOLE... A NIE JEDEN,ALEBO DVA ALE BUDES RAD
-/// AK SA DOSTANES NA SKUSKU
+
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -17,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 
     //tu je napevno nastavena ip. treba zmenit na to co ste si zadali do text boxu alebo nejaku inu pevnu. co bude spravna
-    ipaddress= "127.0.0.1";//192.168.1.11toto je na niektory realny robot.. na lokal budete davat "127.0.0.1"
+    ipaddress= "192.168.1.12";//192.168.1.11toto je na niektory realny robot.. na lokal budete davat "127.0.0.1"
   //  cap.open("http://192.168.1.11:8000/stream.mjpg");
     ui->setupUi(this);
     datacounter=0;
@@ -42,6 +36,7 @@ bool deerFlag = false;
 bool autoMove = false;
 double distanceFromGoal;
 double error;
+bool stopStop = false;
 void MainWindow::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
@@ -473,15 +468,19 @@ bool MainWindow::analyzeReach(double targetX, double targetY) {  // can I reach 
     double xDiff = targetX - currentX;
     double yDiff = targetY - currentY;
     double distance = sqrt(xDiff*xDiff + yDiff*yDiff)*1000;
+
     double wantThisAngle = atan2(yDiff, xDiff);
+    if(stopStop){
+        distance = 0;
+    }
 
     for (int i=0; i<copyOfLaserData.numberOfScans; i++) {
-        if (copyOfLaserData.Data[i].scanDistance < 150) continue; // 150 mm invladi
+        if (copyOfLaserData.Data[i].scanDistance < 150) continue;
         double angle = -(2*PI-((double)copyOfLaserData.Data[i].scanAngle/180*PI))+wantThisAngle-fi;
         while (angle < -PI) angle += 2*PI;
-        while (angle > PI) angle -= 2*PI;  // make sure  -p p
-        if (abs(angle) > 0.5*PI) continue; // only chceck front
-        double treshold = 600; // treshold pod týmto ne
+        while (angle > PI) angle -= 2*PI;
+        if (abs(angle) > 0.5*PI) continue;
+        double treshold = 600;
         if (angle < 0.01 && copyOfLaserData.Data[i].scanDistance < distance) return false;
         if (copyOfLaserData.Data[i].scanDistance < distance && copyOfLaserData.Data[i].scanDistance < (double) treshold / (2*abs(sin(angle)))) {
             return false;
