@@ -2,13 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QPainter>
 #include <math.h>
-///TOTO JE DEMO PROGRAM...AK SI HO NASIEL NA PC V LABAKU NEPREPISUJ NIC,ALE SKOPIRUJ SI MA NIEKAM DO INEHO FOLDERA
-/// AK HO MAS Z GITU A ROBIS NA LABAKOVOM PC, TAK SI HO VLOZ DO FOLDERA KTORY JE JASNE ODLISITELNY OD TVOJICH KOLEGOV
-/// NASLEDNE V POLOZKE Projects SKONTROLUJ CI JE VYPNUTY shadow build...
-/// POTOM MIESTO TYCHTO PAR RIADKOV NAPIS SVOJE MENO ALEBO NEJAKY INY LUKRATIVNY IDENTIFIKATOR
-/// KED SA NAJBLIZSIE PUSTIS DO PRACE, SKONTROLUJ CI JE MIESTO TOHTO TEXTU TVOJ IDENTIFIKATOR
-/// AZ POTOM ZACNI ROBIT... AK TO NESPRAVIS, POJDU BODY DOLE... A NIE JEDEN,ALEBO DVA ALE BUDES RAD
-/// AK SA DOSTANES NA SKUSKU
+
 
 void loadMap();
 void padding();
@@ -290,9 +284,8 @@ double cordY = 0;
 double fi = 0;
 double currentX = 0;
 double currentY = 0;
-long double tickToMeter = 0.000085292090497737556558; // [m/tick]
-long double b = 0.23; // wheelbase distance in meters, from kobuki manual https://yujinrobot.github.io/kobuki/doxygen/enAppendixProtocolSpecification.html
-double Kp = 2000;
+long double tickToMeter = 0.000085292090497737556558;
+long double b = 0.23;
 double KpR = 3;
 
 double natocenie = 0.3;
@@ -343,9 +336,9 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
             rotacia = 1.5;
         if(rotacia < -1.5)
             rotacia = -1.5;
-        if(rychlost > 600)
+        if(rychlost > 500)
         {
-            rychlost = 600;
+            rychlost = 500;
         }
         if(rychlost-rampa > ramVal){
             rychlost = rampa+ramVal;
@@ -355,12 +348,12 @@ void MainWindow::zadaniePrve(TKobukiData robotdata){
 
 /////////////////////////////////////////////////// U1
         if(error > 0.03){
-            if(abs(rotacia) > (30*PI/180)){    // musi sa otočiť
+            if(abs(rotacia) > (30*PI/180)){
                 robot.setRotationSpeed(rotacia);
                 rampa = 10;
             }
             else{
-                robot.setArcSpeed(rychlost,rychlost/rotacia); // ide rovno
+                robot.setArcSpeed(rychlost,rychlost/rotacia);
             }
         }
         else{ //došiel
@@ -410,7 +403,7 @@ void MainWindow::Zadanie3(){
     static double latestAngle = fi;
     bool newData = false;
 
-    if(abs(rotacia) > (10*PI/180)){    // musi sa otočiť
+    if(abs(rotacia) > (10*PI/180)){
         return;
     }
 
@@ -435,10 +428,10 @@ void MainWindow::Zadanie3(){
             for (int riadok=0; riadok < mapSize*2-1; riadok++) {
                 char character = map[riadok][stlpec] ? '#' : ' ';
                 MyFile << character;
-                // std::cout << character;
+
             }
             MyFile << std::endl;
-            //std::cout << std::endl;
+
         }
         MyFile.close();
     }
@@ -460,7 +453,7 @@ void MainWindow::zadanieDruhe(double uhol, int dist){
 
     if(((uhol < 45 ) || (uhol >315 )) && (dist > 5) && (dist>35)){
 
-        edgeAngle = uhol; // našiel som edge
+        edgeAngle = uhol;
 
     }
 
@@ -471,18 +464,18 @@ void MainWindow::zadanieDruhe(double uhol, int dist){
 
 
 
-bool MainWindow::analyzeReach(double targetX, double targetY) {  // can I reach these ?
+bool MainWindow::analyzeReach(double targetX, double targetY) {
     double xDiff = targetX - currentX;
     double yDiff = targetY - currentY;
     double distance = sqrt(xDiff*xDiff + yDiff*yDiff)*1000;
     double wantThisAngle = atan2(yDiff, xDiff);
     for (int i=0; i<copyOfLaserData.numberOfScans; i++) {
-        if (copyOfLaserData.Data[i].scanDistance < 150) continue; // 150 mm invladi
+        if (copyOfLaserData.Data[i].scanDistance < 150) continue;
         double angle = -(2*PI-((double)copyOfLaserData.Data[i].scanAngle/180*PI))+wantThisAngle-fi;
         while (angle < -PI) angle += 2*PI;
-        while (angle > PI) angle -= 2*PI;  // make sure  -p p
-        if (abs(angle) > 0.5*PI) continue; // only chceck front
-        double treshold = 600; // treshold pod týmto ne
+        while (angle > PI) angle -= 2*PI;
+        if (abs(angle) > 0.5*PI) continue;
+        double treshold = 600;
         if (angle < 0.01 && copyOfLaserData.Data[i].scanDistance < distance) return false;
         if (copyOfLaserData.Data[i].scanDistance < distance && copyOfLaserData.Data[i].scanDistance < (double) treshold / (2*abs(sin(angle)))) {
             return false;
@@ -505,31 +498,24 @@ double floodY = 0;
 
 void MainWindow::zad4() {
     if (!flagZ4) return;
-    /*
-    static double prevFi = fi;
-    if (abs(prevFi-fi) > 0.001) {
-        prevFi = fi;
-        return;
-    }
-    prevFi = fi;
-*/
+
     if (!autoMove) {
 
         if (abs(floodX-currentX) + abs(floodY-currentY) < 0.15) {
             flagZ4 = false;
-            cout << "end" << endl;
+
 
         } else {
             double forX = 0;
             double forY = 0;
             double midPointX;
             double midPointY;
-            int locMin = space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)]; // current = robot
+            int locMin = space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)];
             for (int col=0; col < size*2-1; col++) {
                 for (int row=0; row < size*2-1; row++) {
                     midPointX = (double) 6*row/size - 6 + (double) 6/size/2;
-                    midPointY = (double) 6*col/size - 6 + (double) 6/size/2;  // mid of current square
-                    if (space[row][col] < locMin && space[row][col] > 1 && analyzeReach(midPointX, midPointY)) { //reachable and not obstacle and smaller
+                    midPointY = (double) 6*col/size - 6 + (double) 6/size/2;
+                    if (space[row][col] < locMin && space[row][col] > 1 && analyzeReach(midPointX, midPointY)) {
                         locMin = space[row][col];
                         forX = midPointX;
                         forY = midPointY;
@@ -543,7 +529,6 @@ void MainWindow::zad4() {
                 cordX = forX;
                 cordY = forY;
             }
-            cout << "new position: " << cordX << ", " << cordY <<endl;
             autoMove = true;
         }
     }
@@ -567,7 +552,7 @@ void loadMap(){
         for (int row=0; row < size*2-1; row++) {
             space[row][col] = getc(mapa) == '#';
         }
-        getc(mapa); // Precitat \n
+        getc(mapa);
     }
     fclose(mapa);
 
@@ -581,7 +566,7 @@ void padding(){
                 for (int padX = -2; padX <= 2; padX++) {
                     for (int padY = -2; padY <= 2; padY++) {
                         if (space[row+padX][col+padY] == 0) space[row+padX][col+padY] = 2;
-                    } // 5x5 padding filter
+                    }
                 }
             }
         }
@@ -604,14 +589,14 @@ void flood(){
     int numbering = 3;
 
     space[size+(int)(x*size/6)][size+(int)(y*size/6)] = 2;
-    while (space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)] == 0) { // koniec = robot
+    while (space[size+(int)(currentX*size/6)][size+(int)(currentY*size/6)] == 0) {
         flooding = false;
         for (int col=0; col < size*2-1; col++) {
             for (int row=0; row < size*2-1; row++) {
-                if (space[row][col] == numbering-1) { //has number ? iterate adj cells : continue;
+                if (space[row][col] == numbering-1) {
                     for (int offX = -1; offX <= 1; offX++) {
                         for (int offY = -1; offY <= 1; offY++) {
-                            if (space[row+offX][col+offY] == 0) { // empty ? add number : continue;
+                            if (space[row+offX][col+offY] == 0) {
                                 space[row+offX][col+offY] = numbering;
                                 flooding = true;
                             }
